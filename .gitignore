@@ -1,0 +1,13 @@
+# Environnement virtuel
+venv/
+
+# wandb files
+wandb/
+
+# Trained models
+TIC_TAC_TOE_BEST_MODELS/
+
+# IDE setup files
+.idea/
+
+

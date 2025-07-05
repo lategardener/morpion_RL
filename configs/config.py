@@ -2,6 +2,17 @@ import os
 import torch.nn as nn
 from utils.models_utils import exp_decay
 
+
+# Game parameters
+DEFAULT_PATTERN_VICTORY_LENGTH = 3
+DEFAULT_BOARD_LENGTH = 3
+EMPTY_CELL = 3
+VICTORY_REWARD = 1
+DEFAULT_FIRST_PLAY_RATE = 0.5
+DEFAULT_REVIEW_RATIO = 0.0
+
+
+# Training parameters
 # Dossiers
 MODELS_DIR = "models"
 TAMPON_DIR = "tampon"

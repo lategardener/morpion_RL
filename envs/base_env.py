@@ -1,7 +1,7 @@
 import gymnasium as gym
 
 from utils.heuristics import *
-from utils.utils import *
+from utils.terminal_colors import *
 
 
 class TicTacToeBaseEnv(gym.Env):

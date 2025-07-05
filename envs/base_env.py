@@ -102,7 +102,7 @@ class TicTacToeBaseEnv(gym.Env):
             if possible_win:
                 reward = -5
             else:
-                reward = heuristic_points(str(self.player), str(1 - self.player), self.gameboard, self.board_length, self.pattern_victory_length)
+                reward = heuristic_points(str(self.player), str(1 - self.player), self.gameboard, self.board_length, self.pattern_victory_length, self.valid_actions())
             done = False
 
         self.player = 1 - self.player

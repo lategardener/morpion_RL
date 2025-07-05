@@ -1,5 +1,4 @@
 import json
-import os
 import random
 
 from agents import RandomAgent, SmartRandomAgent, PPOAgent
@@ -95,7 +94,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
                         self.retrieve_lost_games.append([value["player"], value["board"]])
 
             except FileNotFoundError:
-                print(f"{RED}❌ Aucun fichier de parties perdues trouvé. {RESTART}")
+                print(f"{RED}❌ Aucun fichier de parties perdues trouvé. {RESET}")
 
         if random.random() >= self.review_ratio:
             self.draw = random.random()

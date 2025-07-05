@@ -1,5 +1,5 @@
 import gymnasium as gym
-
+from configs.config import *
 from utils.heuristics import *
 from utils.terminal_colors import *
 
@@ -124,9 +124,9 @@ class TicTacToeBaseEnv(gym.Env):
             print(f" {row_index:02} ", end="")  # Affiche le numéro de la ligne
             for pattern in line:
                 if pattern == 0:
-                    print("| " + f"{BLUE}"  +  f"{int(pattern)} " + RESTART, end="")
+                    print("| " + f"{BLUE}"  +  f"{int(pattern)} " + RESET, end="")
                 elif pattern == 1:
-                    print("| " + f"{RED}"  +  f"{int(pattern)} " + RESTART, end="")
+                    print("| " + f"{RED}"  +  f"{int(pattern)} " + RESET, end="")
                 else:
                     print("|   ", end="")
 

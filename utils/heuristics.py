@@ -492,7 +492,7 @@ def heuristic_points(playerId, opponentId, board, size, length_victory_pattern, 
     bonus = 0
     if is_winning_move(playerId, board, size, length_victory_pattern, auhtorized_moves):
         bonus = 0.1
-        return bonus
+    return bonus
 
 
 

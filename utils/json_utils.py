@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import json
+from configs.config import *
 
 def convert_to_serializable(obj):
     """Convertit les objets numpy en types Python natifs pour la sérialisation JSON."""
@@ -16,7 +17,7 @@ def convert_to_serializable(obj):
         return [convert_to_serializable(item) for item in obj]
     return obj
 
-def load_opponent_stats(opponents, stats_path=None):
+def load_opponent_stats(opponents, stats_path=STATS_PATH):
     """Charge les statistiques des adversaires depuis le fichier JSON."""
     if os.path.exists(stats_path):
         with open(stats_path, "r") as f:

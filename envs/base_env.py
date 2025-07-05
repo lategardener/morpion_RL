@@ -13,6 +13,7 @@ class TicTacToeBaseEnv(gym.Env):
                  render_mode=DEFAULT_RENDER_MODE,
                  victory_reward=5):
 
+        self.player = 0
         self.board_length = board_length # Board length
         self.pattern_victory_length = pattern_victory_length # Victory pattern length
         self.render_mode = render_mode # display mode
@@ -54,7 +55,6 @@ class TicTacToeBaseEnv(gym.Env):
     def reset(self, seed=None, options=None):
         self.player = 0
         self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8)
-
         return self.get_observation(), {}
 
 
@@ -93,7 +93,7 @@ class TicTacToeBaseEnv(gym.Env):
             reward = self.victory_reward
             done = True
 
-        # Check if the board is full
+        # Check if the board is fullclear
         elif board_is_full(self.gameboard):
             reward = 0
             done = True

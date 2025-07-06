@@ -15,3 +15,6 @@ best_models/
 scripts/models/
 scripts/wandb/
 
+# Ignorer tous les fichiers pycache
+__pycache__/
+*.py[cod]

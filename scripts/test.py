@@ -1,97 +1,92 @@
-from envs.base_env import  *
-import os
 import numpy as np
-from sb3_contrib import MaskablePPO
 from time import sleep
-import random
+from envs.base_env import TicTacToeBaseEnv
+from agents.ppo_agent import PPOAgent
+from agents.random_agent import RandomAgent
+from agents.smart_random_agent import SmartRandomAgent
+from configs.config import *
+
+def load_agent(agent_type):
+    """
+    Load the appropriate agent based on type string or model path.
+    """
+    if agent_type == "random":
+        return RandomAgent()
+    elif agent_type == "smart_random":
+        return SmartRandomAgent()
+    elif agent_type == "human":
+        return "human"
+    elif os.path.exists(agent_type):
+        return PPOAgent(agent_type)
+    else:
+        raise ValueError(f"❌ Unknown agent type or invalid model path: {agent_type}")
 
 
-def get_player_move(env, player=None):
+def get_action(env, agent):
+    """
+    Determine the action to take based on the type of agent.
+    """
+    valid_moves = np.where(env.valid_actions() == 1)[0]
 
-    if player is None:
-        """ Demande au joueur humain de choisir une case valide en fonction du vrai plateau de jeu. """
+    if agent == "human":
         while True:
             try:
-                move = int(input(f"🔢 Entrez un numéro de case {env.valid_actions()}: "))
-                if int(env.valid_actions()[move]) == 1:
+                move = int(input(f"🔢 Enter a valid cell {list(valid_moves)}: "))
+                if move in valid_moves:
                     return move
-                else:
-                    print("❌ Case invalide, choisissez une case libre.")
+                print("❌ Invalid cell.")
             except ValueError:
-                print("❌ Entrez un nombre valide.")
-    else:
-        valid_moves = np.where(env.valid_actions() == 1)[0]
+                print("❌ Invalid input.")
 
-        if player == "random":
-            return random.choice(valid_moves)
+    elif isinstance(agent, RandomAgent):
+        return agent.play(valid_moves=valid_moves)
 
-        elif player == "smart_random":
-            winning_move = is_winning_move(env.player, env.gameboard, env.board_length, env.pattern_length, valid_moves)
-            blocking_move = is_winning_move(1 - env.player, env.gameboard, env.board_length, env.pattern_length, valid_moves)
+    elif isinstance(agent, SmartRandomAgent):
+        return agent.play(player=env.player, gameboard=env.gameboard, valid_moves=valid_moves)
 
-            if winning_move is not None:
-                return winning_move
-            elif blocking_move is not None:
-                return blocking_move
-            return random.choice(valid_moves)
-
-        # 5️⃣ Dernier recours : Coup aléatoire
-        return random.choice(valid_moves)
-
-
-
-# Charger le modèle entraîné
-if os.path.exists("../TIC_TAC_TOE_BEST_MODELS/tIC_TAC_TOE_3X3.zip"):
-    print("🔄 Chargement du modèle ...")
-    model = MaskablePPO.load("../TIC_TAC_TOE_BEST_MODELS/tIC_TAC_TOE_3X3.zip")
-
-
-if os.path.exists("../MODELS/ppo_tictactoe_14.zip"):
-    print("🔄 Chargement du modèle ...")
-    model2 = MaskablePPO.load("../MODELS/ppo_tictactoe_14.zip")
-
-
-
-def mask_fn(env):
-    return env.valid_actions()
-
-env = TicTacToeBaseEnv(board_length=3, pattern_length=3)
-obs, _ = env.reset()
-done = False
-
-rewards = 0
-current_agent = None
-
-while not done:
-    current_agent = env.player
-
-    # Sélectionne le bon modèle
-    if current_agent == 1:
-        print(f"model {model} is playing")
-        action_masks = mask_fn(env)  # Récupère le masque d'actions valides
-        action, _ = model.predict(obs, action_masks=action_masks, deterministic=True)  # Applique le masque
+    elif isinstance(agent, PPOAgent):
+        obs = env.get_observation()
+        return agent.play(obs)
 
     else:
-        player = "Marc"
-        print(f"{player} is playing")
-        action = get_player_move(env, None)
-        # print(f"{model2} is playing")
-        # action_masks = mask_fn(env)  # Récupère le masque d'actions valides
-        # action, _ = model2.predict(obs, action_masks=action_masks, deterministic=False)  # Applique le masque
+        raise TypeError("❌ Unsupported agent type.")
 
 
-    obs, rewards, done, _, _ = env.step(action)
+def play_game(player1_type, player2_type, board_length=DEFAULT_BOARD_LENGTH, pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH, render_delay=1.5):
+    """
+    Main loop to play a game between two agents.
+    """
+    env = TicTacToeBaseEnv(board_length=board_length, pattern_victory_length=pattern_victory_length)
+    obs, _ = env.reset()
+    done = False
 
-    env.render()
-    sleep(0.5)
-    print(f"obs : {obs}, action: {action}, rewards: {rewards}, done: {done}")
+    players = {
+        0: load_agent(player1_type),
+        1: load_agent(player2_type)
+    }
 
-if rewards > 0:
-    print(f"{current_agent} won")
-elif rewards < 0:
-    print(f"{env.player} won")
-else:
-    print(f"draw")
+    while not done:
+        current_player = env.player
+        agent = players[current_player]
+        print(f"\n🔁 Player {current_player} ({type(agent).__name__}) is playing...")
+
+        action = get_action(env, agent)
+        obs, reward, done, _, _ = env.step(action)
+
+        env.render(action=action)
+        sleep(render_delay)
+
+    if reward > 0:
+        print(f"🎉 Player {1 - env.player} wins!")
+    elif reward < 0:
+        print(f"🎉 Player {env.player} wins!")
+    else:
+        print("🤝 It's a draw.")
 
 
-
+# Example usage
+if __name__ == "__main__":
+    play_game(
+        player1_type="smart_random",
+        player2_type="../scripts/models/model_1.zip"
+    )

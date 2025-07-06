@@ -40,9 +40,6 @@ def get_player_move(env, player=None):
 
 
 
-
-
-
 # Charger le modèle entraîné
 if os.path.exists("../TIC_TAC_TOE_BEST_MODELS/tIC_TAC_TOE_3X3.zip"):
     print("🔄 Chargement du modèle ...")

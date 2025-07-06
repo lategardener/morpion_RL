@@ -110,28 +110,41 @@ class TicTacToeBaseEnv(gym.Env):
 
 
 
-    def render(self):
+    def render(self, action=None):
+        line, column = divmod(action, self.board_length)
+
         print("    ", end="")
         for i in range(self.board_length):
             print(f" {i}  ", end="")
         print()
 
         # Ligne de séparation initiale
-        print("    " + "+---" * self.board_length + "+")
+        print("    " + WHITE + FAINT + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
 
         # Affiche les lignes du tableau avec les numéros de ligne à gauche
-        for row_index, line in enumerate(self.gameboard):
+        for row_index, row in enumerate(self.gameboard):
             print(f" {row_index:02} ", end="")  # Affiche le numéro de la ligne
-            for pattern in line:
-                if pattern == 0:
-                    print("| " + f"{BLUE}"  +  f"{int(pattern)} " + RESET, end="")
-                elif pattern == 1:
-                    print("| " + f"{RED}"  +  f"{int(pattern)} " + RESET, end="")
-                else:
-                    print("|   ", end="")
+            for col_index, pattern in enumerate(row):
+                symbol = int(pattern)
+                color = None
+                if symbol == 0:
+                    color = BLUE
+                elif symbol == 1:
+                    color = RED
+                if col_index == column and row_index == line:
+                    color = YELLOW
+                if symbol != EMPTY_CELL:
+                    print(WHITE + FAINT + "| " + RESET + BOLD + color +  f"{symbol} " + RESET, end="")
+                if symbol == EMPTY_CELL:
+                    print(WHITE + FAINT + "|   " + RESET, end="")
 
-            print("|")
-            print("    " + "+---" * self.board_length + "+")
+            print(WHITE + FAINT + "|" + RESET)
+            if row_index < self.board_length - 1:
+                print("    " + WHITE + FAINT + "├———" + "•———" * (self.board_length - 1) + "┤" + RESET)
+            else:
+                print("    " + WHITE + FAINT + "└———" +  "┴———" * (self.board_length - 1) + "┘" +  RESET)
+
+
 
 
 

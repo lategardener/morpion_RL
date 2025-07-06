@@ -2,6 +2,7 @@ import json
 from collections import deque
 from envs import TicTacToeTrainingEnv
 from utils.json_utils import convert_to_serializable
+from scripts.action_mask_ import mask_fn
 
 
 def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=None):
@@ -51,7 +52,7 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=
             episode_data = {"player": env.player, "board": []}
 
             while not done:
-                action, _ = model.predict(obs, deterministic=True)
+                action, _ = model.predict(obs, deterministic=True, action_masks=mask_fn(env))
                 obs, reward, done, _, _ = env.step(action)
                 if not done:
                     episode_data["board"] = convert_to_serializable(obs["observation"])

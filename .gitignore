@@ -12,3 +12,6 @@ TIC_TAC_TOE_BEST_MODELS/
 
 best_models/
 
+scripts/models/
+scripts/wandb/
+

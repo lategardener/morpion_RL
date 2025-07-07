@@ -1,8 +1,7 @@
 import numpy as np
 import os
 import json
-from configs.config import *
-
+from training.advanced_training.config import *
 def convert_to_serializable(obj):
     """Convertit les objets numpy en types Python natifs pour la sérialisation JSON."""
     if isinstance(obj, np.ndarray):

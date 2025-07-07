@@ -1,5 +1,6 @@
 import numpy as np
 from time import sleep
+import os
 from envs.base_env import TicTacToeBaseEnv
 from agents.ppo_agent import PPOAgent
 from agents.random_agent import RandomAgent

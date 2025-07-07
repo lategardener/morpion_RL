@@ -88,5 +88,5 @@ def play_game(player1_type, player2_type, board_length=DEFAULT_BOARD_LENGTH, pat
 if __name__ == "__main__":
     play_game(
         player1_type="smart_random",
-        player2_type="../scripts/models/model_1.zip"
+        player2_type="../models/models_9_5/model_9_5_1.zip"
     )

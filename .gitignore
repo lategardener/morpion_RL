@@ -4,7 +4,7 @@ venv/
 # wandb files
 wandb/
 
-# Trained models
+# Trained models_9_5
 TIC_TAC_TOE_BEST_MODELS/
 
 # IDE setup files
@@ -12,8 +12,8 @@ TIC_TAC_TOE_BEST_MODELS/
 
 best_models/
 
-scripts/models/
-scripts/wandb/
+models/models_9_5/
+models/models_9_5/wandb/
 
 # Ignorer tous les fichiers pycache
 __pycache__/

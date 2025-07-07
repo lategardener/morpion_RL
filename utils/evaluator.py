@@ -2,7 +2,7 @@ import json
 from collections import deque
 from envs import TicTacToeTrainingEnv
 from utils.json_utils import convert_to_serializable
-from scripts.action_mask_ import mask_fn
+from test.action_mask_ import mask_fn
 
 
 def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=None):

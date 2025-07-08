@@ -19,10 +19,11 @@ Fonctionnalités :
 - Rejeu de parties perdues pour réentraînement ciblé
 - Sélection des adversaires basée sur leurs statistiques
 
-
-<div align="center", style="pb:10px">
+<br><br>
+<div align="center">
   DEMO
 </div>
+<br>
 <div align="center">
   <img src="demo/tic_tac_toe.gif" alt="Demo du jeu" width="300"/>
 </div>

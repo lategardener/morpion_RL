@@ -20,5 +20,6 @@ Fonctionnalités :
 - Sélection des adversaires basée sur leurs statistiques
 
 ---
-                                                      DEMO
-                                                    ![Demo du jeu](demo/tic_tac_toe.gif)
+<div align="center">
+  <img src="demo/tic_tac_toe.gif" alt="Demo du jeu" width="300"/>
+</div>

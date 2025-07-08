@@ -2,6 +2,8 @@
 
 <div align="center">
   DEMO
+</div>
+<div align="center">
   <img src="demo/tic_tac_toe.gif" alt="Demo du jeu" width="300"/>
 </div>
 

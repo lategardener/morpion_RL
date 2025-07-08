@@ -1,6 +1,9 @@
 import numpy as np
 from time import sleep
 import os
+
+from rich.live import Live
+
 from envs.base_env import TicTacToeBaseEnv
 from agents.ppo_agent import PPOAgent
 from agents.random_agent import RandomAgent
@@ -23,7 +26,7 @@ def load_agent(agent_type):
         raise ValueError(f"❌ Unknown agent type or invalid model path: {agent_type}")
 
 
-def get_action(env, agent):
+def get_action(env, agent, board_length=DEFAULT_BOARD_LENGTH, pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH):
     """
     Determine the action to take based on the type of agent.
     """
@@ -43,7 +46,7 @@ def get_action(env, agent):
         return agent.play(valid_moves=valid_moves)
 
     elif isinstance(agent, SmartRandomAgent):
-        return agent.play(player=env.player, gameboard=env.gameboard, valid_moves=valid_moves)
+        return agent.play(player=env.player, gameboard=env.gameboard, valid_moves=valid_moves, board_length=board_length, pattern_victory_length=pattern_victory_length)
 
     elif isinstance(agent, PPOAgent):
         obs = env.get_observation()
@@ -53,11 +56,11 @@ def get_action(env, agent):
         raise TypeError("❌ Unsupported agent type.")
 
 
-def play_game(player1_type, player2_type, board_length=DEFAULT_BOARD_LENGTH, pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH, render_delay=1.5):
+def play_game(player1_type, player2_type, board_length=DEFAULT_BOARD_LENGTH, pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH, render_delay=1.5, render_mode="ansi"):
     """
     Main loop to play a game between two agents.
     """
-    env = TicTacToeBaseEnv(board_length=board_length, pattern_victory_length=pattern_victory_length)
+    env = TicTacToeBaseEnv(board_length=board_length, pattern_victory_length=pattern_victory_length, render_mode="matplotlib")
     obs, _ = env.reset()
     done = False
 
@@ -66,16 +69,21 @@ def play_game(player1_type, player2_type, board_length=DEFAULT_BOARD_LENGTH, pat
         1: load_agent(player2_type)
     }
 
+    env.render(action=None, player1_type=player1_type, player2_type=player2_type)
     while not done:
         current_player = env.player
         agent = players[current_player]
         print(f"\n🔁 Player {current_player} ({type(agent).__name__}) is playing...")
 
-        action = get_action(env, agent)
+        action = get_action(env, agent, board_length, pattern_victory_length)
         obs, reward, done, _, _ = env.step(action)
 
-        env.render(action=action)
+        env.render(action=action, player1_type=player1_type, player2_type=player2_type)
         sleep(render_delay)
+
+    if env.render_folder:
+        env.create_gif_from_folder(gif_name="tic_tac_toe.gif", duration=1000)
+
 
     if reward > 0:
         print(f"🎉 Player {1 - env.player} wins!")
@@ -88,6 +96,8 @@ def play_game(player1_type, player2_type, board_length=DEFAULT_BOARD_LENGTH, pat
 # Example usage
 if __name__ == "__main__":
     play_game(
-        player1_type="smart_random",
-        player2_type="../models/models_9_5/model_9_5_1.zip"
+        player1_type="random",
+        player2_type="../models/models_3_3/model_3_3_1.zip",
+        board_length=3,
+        pattern_victory_length=3,
     )

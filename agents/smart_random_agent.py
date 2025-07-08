@@ -6,9 +6,9 @@ class SmartRandomAgent:
     def __init__(self):
         pass
 
-    def play(self, player, gameboard, valid_moves):
-        winning_move = is_winning_move(player, gameboard, DEFAULT_BOARD_LENGTH, DEFAULT_PATTERN_VICTORY_LENGTH, valid_moves)
-        blocking_move = is_winning_move(1 - player, gameboard, DEFAULT_BOARD_LENGTH, DEFAULT_PATTERN_VICTORY_LENGTH, valid_moves)
+    def play(self, player, gameboard, valid_moves, board_length=DEFAULT_BOARD_LENGTH, pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH):
+        winning_move = is_winning_move(player, gameboard, board_length, pattern_victory_length, valid_moves)
+        blocking_move = is_winning_move(1 - player, gameboard, board_length, pattern_victory_length, valid_moves)
 
         if winning_move is not None:
             return winning_move

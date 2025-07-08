@@ -1,14 +1,5 @@
 # 🤖 Tic-Tac-Toe Reinforcement Learning Environment
 
-<div align="center">
-  DEMO
-</div>
-<div align="center">
-  <img src="demo/tic_tac_toe.gif" alt="Demo du jeu" width="300"/>
-</div>
-
----
-
 This project provides a customizable Tic-Tac-Toe (N x N) environment built with [Gymnasium](https://gymnasium.farama.org/) and trained using [Maskable PPO](https://github.com/Stable-Baselines-Team/stable-baselines3-contrib).  
 It includes several types of opponents (random, smart, PPO, etc.) and advanced features such as:
 - Dynamic board size and win conditions
@@ -29,3 +20,9 @@ Fonctionnalités :
 - Sélection des adversaires basée sur leurs statistiques
 
 
+<div align="center", style="pb:10px">
+  DEMO
+</div>
+<div align="center">
+  <img src="demo/tic_tac_toe.gif" alt="Demo du jeu" width="300"/>
+</div>

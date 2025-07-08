@@ -18,3 +18,7 @@ models/models_9_5/wandb/
 # Ignorer tous les fichiers pycache
 __pycache__/
 *.py[cod]
+
+gameboard_images/
+
+models/

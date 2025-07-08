@@ -19,4 +19,6 @@ Fonctionnalités :
 - Rejeu de parties perdues pour réentraînement ciblé
 - Sélection des adversaires basée sur leurs statistiques
 
-![Demo du jeu](demo/tic_tac_toe.gif)
+---
+                                                      DEMO
+                                                    ![Demo du jeu](demo/tic_tac_toe.gif)

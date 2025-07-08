@@ -123,9 +123,6 @@ class TicTacToeBaseEnv(gym.Env):
 
     def render_matplotlib(self, action=None, player1_type=None, player2_type=None):
 
-        if action:
-            line, column = divmod(action, self.board_length)
-
         # Dossier racine projet
         project_root = Path(__file__).resolve().parent.parent
         base_folder = project_root / "gameboard_images"
@@ -186,23 +183,16 @@ class TicTacToeBaseEnv(gym.Env):
                 if cell in (0, 1):
                     symbol = "X" if cell == 0 else "O"
                     color = red if cell == 0 else neon_blue
-                    is_last = None
-                    if action:
-                        is_last = (i, j) == (line, column)
 
-                    if is_last:
-                        # Appliquer l’effet néon
-                        self.neon_text(ax, x + 0.5, y + 0.5, symbol, color, fontsize=24)
-                    else:
-                        # Texte simple
-                        ax.text(
-                            x + 0.5, y + 0.5, symbol,
-                            ha="center", va="center",
-                            fontsize=24,
-                            color=color,
-                            fontweight="bold",
-                            zorder=2
-                        )
+                    # Texte simple
+                    ax.text(
+                        x + 0.5, y + 0.5, symbol,
+                        ha="center", va="center",
+                        fontsize=24,
+                        color=color,
+                        fontweight="bold",
+                        zorder=2
+                    )
 
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()
@@ -250,30 +240,6 @@ class TicTacToeBaseEnv(gym.Env):
 
             else:
                 raise NotImplementedError(f"render_mode '{self.render_mode}' not supported.")
-
-
-
-    def neon_text(self, ax, x, y, text, color, fontsize=20):
-        """
-        Affiche du texte avec un effet néon façon cyberpunk.
-        """
-        # Crée les effets lumineux autour du texte
-        pe = [path_effects.Stroke(linewidth=4, foreground=color, alpha=0.1),
-              path_effects.Stroke(linewidth=3, foreground=color, alpha=0.3),
-              path_effects.Stroke(linewidth=2, foreground=color, alpha=0.5),
-              path_effects.Stroke(linewidth=1, foreground=color, alpha=0.8),
-              path_effects.Normal()]
-
-        txt = ax.text(
-            x, y, text,
-            ha='center', va='center',
-            color=color,
-            fontsize=fontsize,
-            fontweight="bold",
-            path_effects=pe,
-            zorder=2
-        )
-        return txt
 
 
     def create_gif_from_folder(self, gif_name="game.gif", duration=500):

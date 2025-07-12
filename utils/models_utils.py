@@ -2,12 +2,24 @@ from typing import Callable
 import os
 
 def get_models(path):
-    """Retourne la liste des modèles triés par numéro."""
-    return sorted(
-        [os.path.join(path, f) for f in os.listdir(path)
-         if f.startswith("ppo_connectx_") and f.endswith(".zip")],
-        key=lambda x: int(x.split("_")[-1].split(".")[0])
-    )
+    """Retourne la liste des modèles triés par numéro, même avec plusieurs underscores."""
+    print(f"---{path}---")
+    model_files = [
+        os.path.join(path, f)
+        for f in os.listdir(path)
+        if f.startswith("model_") and f.endswith(".zip")
+    ]
+
+    def extract_number(file_path):
+        name = os.path.basename(file_path)
+        try:
+            # prend le dernier élément avant ".zip"
+            return int(name.replace(".zip", "").split("_")[-1])
+        except:
+            return -1  # fallback si jamais erreur
+
+    return sorted(model_files, key=extract_number)
+
 
 
 def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_increase=0.05):

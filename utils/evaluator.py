@@ -3,6 +3,7 @@ from collections import deque
 from envs import TicTacToeTrainingEnv
 from utils.json_utils import convert_to_serializable
 from test.action_mask_ import mask_fn
+from training.advanced_training.config import *
 
 
 def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=None):
@@ -18,6 +19,8 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=
     for opponent in unique_opponents:
         env1 = TicTacToeTrainingEnv(
             opponent_pool=[opponent],
+            board_length=TRAINING_DEFAULT_BOARD_LENGTH,
+            pattern_victory_length=TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH,
             evaluation=True,
             first_play_rate=0.0,
             lost_games_path="defeated_games.json",
@@ -27,6 +30,8 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=
 
         env2 = TicTacToeTrainingEnv(
             opponent_pool=[opponent],
+            board_length=TRAINING_DEFAULT_BOARD_LENGTH,
+            pattern_victory_length=TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH,
             evaluation=True,
             first_play_rate=1.0,
             lost_games_path="defeated_games.json",

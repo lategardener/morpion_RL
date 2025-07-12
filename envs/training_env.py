@@ -3,6 +3,7 @@ import random
 
 from agents import RandomAgent, SmartRandomAgent, PPOAgent
 from envs.base_env import *
+from training.advanced_training.config import TRAINING_DEFAULT_BOARD_LENGTH, TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH
 
 
 class TicTacToeTrainingEnv(TicTacToeBaseEnv):
@@ -70,7 +71,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             elif opponent == "smart_random":
                 models["smart_random"] = SmartRandomAgent()
             elif opponent.endswith(".zip") and os.path.exists(opponent):
-                models[opponent] = PPOAgent(model_path=opponent, evaluation=self.evaluation)
+                models[opponent] = PPOAgent(model_path=opponent, evaluation=True)
         return models
 
 
@@ -135,6 +136,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
                 return self.opponent_model.play(obs)
             else:  # Random or SmartRandom
                 return self.opponent_model.play(
+                    board_length=TRAINING_DEFAULT_BOARD_LENGTH,
+                    pattern_victory_length=TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH,
                     player=self.player,
                     gameboard=self.gameboard,
                     valid_moves=valid_moves

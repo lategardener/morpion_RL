@@ -132,8 +132,9 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=
         }
 
     # Save defeated games to json file if any saved
+    os.makedirs(os.path.dirname(DEFEAT_PATH), exist_ok=True)
     if defeated_games:
-        with open("defeated_games.json", "w") as f:
+        with open(DEFEAT_PATH, "w") as f:
             json.dump({k: v for d in defeated_games for k, v in d.items()}, f, indent=4)
 
     return results

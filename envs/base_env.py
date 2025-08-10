@@ -1,19 +1,22 @@
 from pathlib import Path
-
 import gymnasium as gym
+import numpy as np
 from matplotlib import patches
-from configs.config import *
-from utils.heuristics import *
-from utils.terminal_colors import *
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as path_effects
 import os
 from datetime import datetime
 from PIL import Image
 
+from configs.config import *
+from utils.heuristics import *
+from utils.terminal_colors import *
 
 
 class TicTacToeBaseEnv(gym.Env):
+    """
+    Base TicTacToe environment.
+    Handles basic board mechanics, rewards, and rendering (ANSI or Matplotlib).
+    """
 
     metadata = {'render_modes': ['ansi', 'matplotlib']}
 
@@ -22,22 +25,32 @@ class TicTacToeBaseEnv(gym.Env):
                  render_mode=DEFAULT_RENDER_MODE,
                  victory_reward=REWARD_VICTORY):
 
+        # Player turn (0 or 1)
         self.player = 0
-        self.board_length = board_length # Board length
-        self.pattern_victory_length = pattern_victory_length # Victory pattern length
-        self.render_mode = render_mode # display mode
-        self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8) # gameboard
+
+        # Board parameters
+        self.board_length = board_length  # Size of the board (NxN)
+        self.pattern_victory_length = pattern_victory_length  # Length of consecutive marks required to win
+        self.render_mode = render_mode  # 'ansi' or 'matplotlib'
+
+        # Gameboard initialization
+        self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8)
+
+        # Rendering state
         self.render_folder = None
         self.frame_index = 0
 
-        self.action_space = gym.spaces.Discrete(board_length * board_length) # possible actions
+        # Action and observation spaces (Gymnasium API)
+        self.action_space = gym.spaces.Discrete(board_length * board_length)
         self.observation_space = gym.spaces.Dict({
             "observation": gym.spaces.Box(low=0, high=3, shape=(board_length, board_length), dtype=np.int8),
             "action_mask": gym.spaces.Box(low=0, high=1, shape=(board_length * board_length,), dtype=np.float32)
-        }) # possible observation
+        })
 
+        # Rewards
         self.victory_reward = victory_reward
 
+    # ---------- Getters and setters ----------
     def set_player(self, p):
         self.player = p
 
@@ -50,80 +63,98 @@ class TicTacToeBaseEnv(gym.Env):
     def get_gameboard(self):
         return self.gameboard
 
-
-
+    # ---------- Game logic ----------
     def valid_actions(self):
+        """
+        Returns a binary mask indicating valid moves.
+        """
         mask = np.zeros(self.board_length * self.board_length, dtype=np.int8)
         mask[np.where(self.gameboard.flatten() == EMPTY_CELL)[0]] = 1
         return mask
 
     def get_observation(self):
+        """
+        Returns the observation dict with the board state and valid action mask.
+        """
         return {
             "observation": self.gameboard.copy(),
             "action_mask": self.valid_actions().astype(np.float32)
         }
 
     def reset(self, seed=None, options=None):
+        """
+        Resets the board to an empty state and sets the first player.
+        """
         self.player = 0
         self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8)
         return self.get_observation(), {}
 
-
     def step(self, action):
+        """
+        Executes one move in the environment.
+        - Places the current player's mark.
+        - Checks win/draw conditions.
+        - Switches players.
+        """
 
         done = False
         truncated = False
         reward = 0
 
-
-        # Check if agent played on occupied box
+        # Invalid move check
         if self.valid_actions()[action] == 0:
-            print(f"Action choose : {action}")
-            print(f"valid actions : {self.valid_actions()}")
-            print(f"gameboard : {self.gameboard}")
-            raise ValueError("invalid action")
+            print(f"Chosen action: {action}")
+            print(f"Valid actions: {self.valid_actions()}")
+            print(f"Gameboard:\n{self.gameboard}")
+            raise ValueError("Invalid action: cell already occupied.")
 
-
-        # Recover the coordinates to play
+        # Convert action index to board coordinates
         line, column = divmod(action, self.board_length)
         self.gameboard[line][column] = self.player
 
+        # Check if current move can lead to a win
+        possible_win = is_winning_move(
+            self.player, self.gameboard, self.board_length,
+            self.pattern_victory_length, self.valid_actions()
+        )
 
-        # check if current player can win
-        possible_win = is_winning_move(self.player, self.gameboard, self.board_length, self.pattern_victory_length, self.valid_actions())
-
-        # Check if current player won
-
+        # Victory check
         if (
                 win_on_ascending_diagonal(self.board_length, line, column, self.player, self.gameboard, self.pattern_victory_length) or
                 win_on_descending_diagonal(self.board_length, line, column, self.player, self.gameboard, self.pattern_victory_length) or
                 win_on_line(line, self.player, self.gameboard, self.pattern_victory_length) or
                 win_on_column(column, self.player, self.gameboard, self.pattern_victory_length)
         ):
-
             reward = self.victory_reward
             done = True
 
-        # Check if the board is fullclear
+        # Draw check
         elif board_is_full(self.gameboard):
             reward = 0
             done = True
 
+        # No victory yet
         else:
             if possible_win:
                 reward = REWARD_MISSED_WIN
             else:
-                reward = heuristic_points(str(self.player), str(1 - self.player), self.gameboard, self.board_length, self.pattern_victory_length, self.valid_actions())
-            done = False
+                reward = heuristic_points(
+                    str(self.player), str(1 - self.player),
+                    self.gameboard, self.board_length,
+                    self.pattern_victory_length, self.valid_actions()
+                )
 
+        # Switch player
         self.player = 1 - self.player
+
         return self.get_observation(), reward, done, truncated, {}
 
-
-
+    # ---------- Rendering ----------
     def render_matplotlib(self, action=None, player1_type=None, player2_type=None):
-
-        # Dossier racine projet
+        """
+        Renders the board as a PNG image using Matplotlib.
+        Each frame is saved for possible GIF creation.
+        """
         project_root = Path(__file__).resolve().parent.parent
         base_folder = project_root / "gameboard_images"
         base_folder.mkdir(exist_ok=True)
@@ -149,23 +180,11 @@ class TicTacToeBaseEnv(gym.Env):
         ax.set_xlim(0, self.board_length)
         ax.set_ylim(0, self.board_length)
 
-        # Affiche les noms des joueurs
-        ax.text(
-            0, self.board_length + 0.05,  # Position haut gauche
-            left_name,
-            ha="left", va="bottom",
-            color="red", fontsize=14, fontweight="bold"
-        )
-
-        ax.text(
-            self.board_length, self.board_length + 0.05,  # Position haut droite
-            right_name,
-            ha="right", va="bottom",
-            color="#0b9ed8", fontsize=14, fontweight="bold"
-        )
-
-        # Réduire les marges
-        plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+        # Player names
+        ax.text(0, self.board_length + 0.05, left_name,
+                ha="left", va="bottom", color="red", fontsize=14, fontweight="bold")
+        ax.text(self.board_length, self.board_length + 0.05, right_name,
+                ha="right", va="bottom", color="#0b9ed8", fontsize=14, fontweight="bold")
 
         neon_blue = "#0b9ed8"
         red = "red"
@@ -175,80 +194,68 @@ class TicTacToeBaseEnv(gym.Env):
                 cell = self.gameboard[i][j]
                 x = j
                 y = self.board_length - i - 1
-
-                # Case noire bordure blanche
                 rect = patches.Rectangle((x, y), 1, 1, edgecolor="white", facecolor="black", linewidth=1)
                 ax.add_patch(rect)
 
                 if cell in (0, 1):
                     symbol = "X" if cell == 0 else "O"
                     color = red if cell == 0 else neon_blue
-
-                    # Texte simple
-                    ax.text(
-                        x + 0.5, y + 0.5, symbol,
-                        ha="center", va="center",
-                        fontsize=24,
-                        color=color,
-                        fontweight="bold",
-                        zorder=2
-                    )
+                    ax.text(x + 0.5, y + 0.5, symbol, ha="center", va="center",
+                            fontsize=24, color=color, fontweight="bold", zorder=2)
 
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()
 
         return str(save_path)
 
-
-
     def render(self, action=None, player1_type=None, player2_type=None):
-            if self.render_mode == "ansi":
-                line, column = divmod(action, self.board_length)
+        """
+        Renders the game in ANSI terminal mode or using Matplotlib.
+        """
+        if self.render_mode == "ansi":
+            self._render_ansi(action)
+        elif self.render_mode == "matplotlib":
+            self.render_matplotlib(action=action, player1_type=player1_type, player2_type=player2_type)
+        else:
+            raise NotImplementedError(f"render_mode '{self.render_mode}' not supported.")
 
-                print("    ", end="")
-                for i in range(self.board_length):
-                    print(f" {i}  ", end="")
-                print()
+    def _render_ansi(self, action):
+        """
+        Prints the gameboard to the console in ANSI mode.
+        """
+        line, column = divmod(action, self.board_length)
+        print("    ", end="")
+        for i in range(self.board_length):
+            print(f" {i}  ", end="")
+        print()
 
-                # Ligne de séparation initiale
-                print("    " + WHITE + FAINT + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
+        print("    " + WHITE + FAINT + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
 
-                # Affiche les lignes du tableau avec les numéros de ligne à gauche
-                for row_index, row in enumerate(self.gameboard):
-                    print(f" {row_index:02} ", end="")  # Affiche le numéro de la ligne
-                    for col_index, pattern in enumerate(row):
-                        symbol = int(pattern)
-                        color = None
-                        if symbol == 0:
-                            color = BLUE
-                        elif symbol == 1:
-                            color = RED
-                        if col_index == column and row_index == line:
-                            color += BOLD
-                        if symbol != EMPTY_CELL:
-                            print(WHITE + FAINT + "| " + RESET + color +  f"{symbol} " + RESET, end="")
-                        if symbol == EMPTY_CELL:
-                            print(WHITE + FAINT + "|   " + RESET, end="")
+        for row_index, row in enumerate(self.gameboard):
+            print(f" {row_index:02} ", end="")
+            for col_index, pattern in enumerate(row):
+                symbol = int(pattern)
+                color = None
+                if symbol == 0:
+                    color = BLUE
+                elif symbol == 1:
+                    color = RED
+                if col_index == column and row_index == line:
+                    color += BOLD
+                if symbol != EMPTY_CELL:
+                    print(WHITE + FAINT + "| " + RESET + color + f"{symbol} " + RESET, end="")
+                else:
+                    print(WHITE + FAINT + "|   " + RESET, end="")
+            print(WHITE + FAINT + "|" + RESET)
 
-                    print(WHITE + FAINT + "|" + RESET)
-                    if row_index < self.board_length - 1:
-                        print("    " + WHITE + FAINT + "├———" + "•———" * (self.board_length - 1) + "┤" + RESET)
-                    else:
-                        print("    " + WHITE + FAINT + "└———" +  "┴———" * (self.board_length - 1) + "┘" +  RESET)
-            elif self.render_mode == "matplotlib":
-                self.render_matplotlib(action=action, player1_type=player1_type, player2_type=player2_type)
-
+            if row_index < self.board_length - 1:
+                print("    " + WHITE + FAINT + "├———" + "•———" * (self.board_length - 1) + "┤" + RESET)
             else:
-                raise NotImplementedError(f"render_mode '{self.render_mode}' not supported.")
-
+                print("    " + WHITE + FAINT + "└———" + "┴———" * (self.board_length - 1) + "┘" + RESET)
 
     def create_gif_from_folder(self, gif_name="game.gif", duration=500):
         """
-        Crée un GIF à partir des images PNG présentes dans le dossier.
-
-        :param folder_path: Chemin du dossier contenant les images.
-        :param gif_name: Nom du fichier GIF final.
-        :param duration: Durée entre les frames (en ms).
+        Creates a GIF from PNG frames stored in the render folder.
         """
         images = []
         files = sorted([f for f in os.listdir(self.render_folder) if f.endswith(".png")])
@@ -273,11 +280,12 @@ class TicTacToeBaseEnv(gym.Env):
             print("❌ No PNG images found in the folder.")
             return None
 
-
     def format_name(self, agent_type):
+        """
+        Returns a readable name for the player type.
+        """
         if agent_type is None:
             return "Unknown"
         elif isinstance(agent_type, str) and agent_type.endswith(".zip"):
             return "PPOAgent"
         return agent_type
-

@@ -61,6 +61,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         """Tirage pondéré selon la probabilité calculée"""
         opponents = list(self.opponent_probabilities.keys())
         weights = list(self.opponent_probabilities.values())
+        if random.random() < 0.001:
+            print(f"----------------{self.opponent_probabilities}-------------")
         return random.choices(opponents, weights=weights, k=1)[0]
 
     def preload_opponents(self, opponent_pool):
@@ -81,7 +83,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         """Sélectionne un adversaire au début de chaque partie sans recharger le modèle depuis le disque."""
         obs, info = super().reset(seed, options)
 
-        chosen_opponent = random.choice(list(self.opponent_models.keys()))
+        chosen_opponent = self.choose_opponent()
         self.opponent_model = self.opponent_models[chosen_opponent]
         self.number_turn = 0
         self.retrieve_lost_games = []

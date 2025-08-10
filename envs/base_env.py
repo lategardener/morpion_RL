@@ -20,7 +20,7 @@ class TicTacToeBaseEnv(gym.Env):
     def __init__(self, board_length=DEFAULT_BOARD_LENGTH,
                  pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH,
                  render_mode=DEFAULT_RENDER_MODE,
-                 victory_reward=5):
+                 victory_reward=REWARD_VICTORY):
 
         self.player = 0
         self.board_length = board_length # Board length
@@ -111,7 +111,7 @@ class TicTacToeBaseEnv(gym.Env):
 
         else:
             if possible_win:
-                reward = -5
+                reward = REWARD_MISSED_WIN
             else:
                 reward = heuristic_points(str(self.player), str(1 - self.player), self.gameboard, self.board_length, self.pattern_victory_length, self.valid_actions())
             done = False
@@ -280,15 +280,4 @@ class TicTacToeBaseEnv(gym.Env):
         elif isinstance(agent_type, str) and agent_type.endswith(".zip"):
             return "PPOAgent"
         return agent_type
-
-
-
-
-
-
-
-
-
-
-
 

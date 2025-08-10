@@ -1,4 +1,5 @@
 import numpy as np
+from configs.config import REWARD_CREATE_THREAT, REWARD_ALLOW_OPP_WIN
 
 def win_on_line(number_line, pattern, board, pattern_length):
     list_ = [str(int(elt)) for elt in board[number_line]]
@@ -487,11 +488,11 @@ def agent_heuristic_points_calcul(playerId, opponentId, board, size, length_vict
 
 def heuristic_points(playerId, opponentId, board, size, length_victory_pattern, auhtorized_moves):
     if is_winning_move(opponentId, board, size, length_victory_pattern, auhtorized_moves) is not None:
-        return -5 # 5 before
+        return REWARD_ALLOW_OPP_WIN
 
     bonus = 0
     if is_winning_move(playerId, board, size, length_victory_pattern, auhtorized_moves):
-        bonus = 0.1
+        bonus = REWARD_CREATE_THREAT
     return bonus
 
 

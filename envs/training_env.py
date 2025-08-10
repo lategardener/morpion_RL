@@ -10,7 +10,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
     def __init__(self, board_length=DEFAULT_BOARD_LENGTH,
                  pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH,
                  render_mode=DEFAULT_RENDER_MODE,
-                 victory_reward=VICTORY_REWARD,
+                 victory_reward=REWARD_VICTORY,
                  opponent_pool=None,
                  evaluation=False,
                  first_play_rate=DEFAULT_FIRST_PLAY_RATE,
@@ -164,7 +164,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             valid_moves_after_play = np.where(self.valid_actions() == 1)[0]
             opponent_win_after_moving = is_winning_move(self.player, self.gameboard, self.board_length, self.pattern_victory_length, valid_moves_after_play)
             if opponent_win_after_moving is None:
-                reward_agent += 0.05
+                reward_agent += REWARD_BLOCK_OPP_WIN
 
         """Tour de l'adversaire"""
         opponent_action = self.get_opponent_action()

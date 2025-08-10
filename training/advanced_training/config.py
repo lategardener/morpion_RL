@@ -42,6 +42,7 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 
 # Path to statistics file
 STATS_PATH = os.path.join(MODELS_DIR, "opponent_stats.json")
+DEFEAT_PATH = os.path.join(MODELS_DIR, "defeated_games.json")
 
 # ==============================
 # Hyperparameters

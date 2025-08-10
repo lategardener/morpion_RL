@@ -2,8 +2,14 @@ import numpy as np
 import os
 import json
 from training.advanced_training.config import *
+
 def convert_to_serializable(obj):
-    """Convertit les objets numpy en types Python natifs pour la sérialisation JSON."""
+    """
+    Convert numpy objects to native Python types for JSON serialization.
+    - Converts numpy arrays to lists
+    - Converts numpy ints and floats to native int and float
+    - Recursively converts dictionaries and lists
+    """
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, (np.int64, np.int32)):
@@ -17,7 +23,13 @@ def convert_to_serializable(obj):
     return obj
 
 def load_opponent_stats(opponents, stats_path=STATS_PATH):
-    """Charge les statistiques des adversaires depuis le fichier JSON."""
+    """
+    Load opponent statistics from a JSON file.
+    If the file doesn't exist, initialize an empty dictionary.
+    For each opponent, if not present, add default stats:
+    - defeat_rate = 1.0
+    - victory_rate = 0.0
+    """
     if os.path.exists(stats_path):
         with open(stats_path, "r") as f:
             saved_stats = json.load(f)
@@ -30,6 +42,8 @@ def load_opponent_stats(opponents, stats_path=STATS_PATH):
     return saved_stats
 
 def save_opponent_stats(best_stats, stats_path):
-    """Sauvegarde les statistiques des adversaires dans un fichier JSON."""
+    """
+    Save opponent statistics into a JSON file with indentation for readability.
+    """
     with open(stats_path, "w") as f:
         json.dump(best_stats, f, indent=4)

@@ -29,12 +29,12 @@ def get_models(path):
 
 def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_increase=0.05):
     """
-    Decide whether to save the current model based on performance stats comparison.
+    Decide whether to save the current model based only on defeat rate comparison.
 
     Rules:
     - No opponent should have defeat_rate increased by more than max_defeat_increase.
-    - No opponent should have victory_rate decreased by more than max_defeat_increase.
-    - Otherwise, save only if the number of improvements outweigh regressions beyond the threshold.
+    - Save only if the number of improvements (defeat rate decreases beyond threshold)
+      outweigh regressions (defeat rate increases beyond threshold).
     """
     improvements = 0
     regressions = 0
@@ -42,26 +42,15 @@ def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_incr
     for opponent in current_stats:
         current_defeat = current_stats[opponent]["defeat_rate"]
         best_defeat = best_stats.get(opponent, {"defeat_rate": 1.0})["defeat_rate"]
-        current_victory = current_stats[opponent]["victory_rate"]
-        best_victory = best_stats.get(opponent, {"victory_rate": 0.0})["victory_rate"]
 
-        # Blocking condition: too large increase in defeat rate (e.g. from 0.7 to 0.76 or more)
+        # Blocking condition: too large increase in defeat rate
         if current_defeat >= best_defeat + max_defeat_increase:
             return False
 
-        # Blocking condition: too large decrease in victory rate (e.g. from 0.7 to 0.64 or less)
-        if current_victory <= best_victory - max_defeat_increase:
-            return False
-
-        # Count tolerable improvements and regressions
+        # Count tolerable improvements and regressions on defeat rate
         if current_defeat < best_defeat - threshold:
             improvements += 1
         elif current_defeat > best_defeat + threshold:
-            regressions += 1
-
-        if current_victory > best_victory + threshold:
-            improvements += 1
-        elif current_victory < best_victory - threshold:
             regressions += 1
 
     # Save if improvements exceed regressions

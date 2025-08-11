@@ -67,91 +67,52 @@ BASE_MODELS_NAME = f"model_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PAT
 # ==============================
 # Policy architecture
 # ==============================
-class CustomFeatureExtractorWithMask(BaseFeaturesExtractor):
+class CustomFeatureExtractorWithPlayer(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim=256):
         super().__init__(observation_space, features_dim)
 
-        action_mask_shape = observation_space['action_mask'].shape  # e.g. (board_length*board_length,)
-
-        # CNN to process the board (grayscale, so 1 channel)
+        # Lightweight CNN to process the board (1 channel grayscale)
         self.cnn = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.Conv2d(1, 8, kernel_size=3, padding=1),  # 8 filters instead of 32
             nn.ReLU(),
             nn.Flatten(),
         )
 
-        # Compute flattened CNN output size with dummy input
+        # Compute the flattened CNN output size using a sample input
         with th.no_grad():
             sample_board = th.as_tensor(observation_space['observation'].sample()[None, None]).float()
             n_flatten = self.cnn(sample_board).shape[1]
 
+        # Linear layer after CNN, smaller size
         self.linear_cnn = nn.Sequential(
-            nn.Linear(n_flatten, 128),
+            nn.Linear(n_flatten, 64),  # reduced from 128 to 64
             nn.ReLU(),
         )
 
-        # Small MLP for the action mask
-        self.mask_net = nn.Sequential(
-            nn.Linear(action_mask_shape[0], 64),
+        # MLP for the current_player scalar input
+        self.player_net = nn.Sequential(
+            nn.Linear(1, 16),
             nn.ReLU(),
         )
 
-        # Small MLP for scalar features (num_moves_played, can_win_next, opponent_can_win_next)
-        self.scalar_net = nn.Sequential(
-            nn.Linear(3, 64),
-            nn.ReLU(),
-        )
-
-        # Combine all features
+        # Combine CNN features and player info
         self.final_net = nn.Sequential(
-            nn.Linear(128 + 64 + 64, features_dim),  # CNN + mask + scalar features
+            nn.Linear(64 + 16, features_dim),  # adjusted to the combined input size
             nn.ReLU(),
         )
 
     def forward(self, observations):
-        # Process board: add channel dimension and convert to float
-        board = observations['observation'].unsqueeze(1).float()
+        board = observations['observation'].unsqueeze(1).float()    # (batch, 1, H, W)
+        current_player = observations['current_player'].float().view(-1, 1)  # (batch, 1)
 
-        # Process action mask
-        mask = observations['action_mask'].float()
-
-        # Helper function to convert possible one-hot vectors to scalar values
-        def to_scalar(tensor):
-            # If tensor is 2D with second dimension == 2 (one-hot), take argmax
-            if tensor.dim() == 2 and tensor.shape[1] == 2:
-                return tensor.argmax(dim=1).float()
-            # Otherwise assume it's already scalar and convert to float
-            return tensor.float()
-
-        # Convert scalar or one-hot observations to scalar floats
-        num_moves = observations['num_moves_played'].float().view(-1, 1)
-        can_win = observations['can_win_next'].float().view(-1, 1)
-        opponent_win = observations['opponent_can_win_next'].float().view(-1, 1)
-
-
-        # Debug: Print tensor shapes
-        # print("num_moves shape:", num_moves.shape)
-        # print("can_win shape:", can_win.shape)
-        # print("opponent_win shape:", opponent_win.shape)
-
-        # Stack scalars into a feature vector (batch_size, 3)
-        scalar_features = th.cat([num_moves, can_win, opponent_win], dim=1)
-
-        # Forward pass through respective networks
         cnn_out = self.linear_cnn(self.cnn(board))
-        mask_out = self.mask_net(mask)
-        scalar_out = self.scalar_net(scalar_features)
+        player_out = self.player_net(current_player)
 
-        # Concatenate all features into a single tensor
-        combined = th.cat([cnn_out, mask_out, scalar_out], dim=1)
-
-        # Final combined layer output
+        combined = th.cat([cnn_out, player_out], dim=1)
         return self.final_net(combined)
 
 # Define policy kwargs to use this custom feature extractor
 policy_kwargs = dict(
-    features_extractor_class=CustomFeatureExtractorWithMask,
+    features_extractor_class=CustomFeatureExtractorWithPlayer,
     features_extractor_kwargs=dict(features_dim=256)
 )

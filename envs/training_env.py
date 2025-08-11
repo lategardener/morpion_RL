@@ -46,7 +46,6 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
     def load_opponent_statistics(self, filepath):
         """Load opponent statistics from JSON file."""
         if filepath is None or not os.path.exists(filepath):
-            print("⚠️ No statistics file provided or file not found.")
             return {}
         with open(filepath, "r") as f:
             return json.load(f)
@@ -78,8 +77,6 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         """
         opponents = list(self.opponent_probabilities.keys())
         weights = list(self.opponent_probabilities.values())
-        if random.random() < 0.001:
-            print(f"----------------{self.opponent_probabilities}-------------")
         return random.choices(opponents, weights=weights, k=1)[0]
 
     def preload_opponents(self, opponent_pool):

@@ -51,9 +51,7 @@ class TicTacToeBaseEnv(gym.Env):
         self.observation_space = gym.spaces.Dict({
             "observation": gym.spaces.Box(low=0, high=3, shape=(board_length, board_length), dtype=np.int8),  # Board state
             "action_mask": gym.spaces.Box(low=0, high=1, shape=(board_length * board_length,), dtype=np.float32),  # Valid moves mask
-            "num_moves_played": gym.spaces.Box(low=0.0, high=1.0, shape=(), dtype=np.float32),  # Proportion of board filled
-            "can_win_next": gym.spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
-            "opponent_can_win_next": gym.spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
+            "current_player": gym.spaces.Box(low=0.0, high=1.0, shape=(), dtype=np.float32),  # Proportion of board filled
         })
 
         # Reward for winning the game

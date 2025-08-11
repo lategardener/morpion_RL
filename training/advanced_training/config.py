@@ -34,7 +34,6 @@ MODELS_DIR = os.path.join(
     f'models_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}'
 )
 
-print(MODELS_DIR)  # For verification
 
 # Folder name for wandb model saving (if used)
 WANDB_MODEL_DIR = f"{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
@@ -72,13 +71,13 @@ class CustomFeatureExtractorWithMask(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim=256):
         super().__init__(observation_space, features_dim)
 
-        action_mask_shape = observation_space['action_mask'].shape  # (board_length*board_length,)
+        action_mask_shape = observation_space['action_mask'].shape  # e.g. (board_length*board_length,)
 
         # CNN to process the board (grayscale, so 1 channel)
         self.cnn = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3),
+            nn.Conv2d(1, 32, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=3),
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Flatten(),
         )
@@ -99,7 +98,7 @@ class CustomFeatureExtractorWithMask(BaseFeaturesExtractor):
             nn.ReLU(),
         )
 
-        # Small MLP for scalar features (num_moves_played, agent_can_win_next, opponent_can_win_next)
+        # Small MLP for scalar features (num_moves_played, can_win_next, opponent_can_win_next)
         self.scalar_net = nn.Sequential(
             nn.Linear(3, 64),
             nn.ReLU(),
@@ -118,26 +117,41 @@ class CustomFeatureExtractorWithMask(BaseFeaturesExtractor):
         # Process action mask
         mask = observations['action_mask'].float()
 
-        # Stack scalar features into tensor (batch, 3)
-        scalar_features = th.stack([
-            observations['num_moves_played'].float(),
-            observations['agent_can_win_next'].float(),
-            observations['opponent_can_win_next'].float()
-        ], dim=1)
+        # Helper function to convert possible one-hot vectors to scalar values
+        def to_scalar(tensor):
+            # If tensor is 2D with second dimension == 2 (one-hot), take argmax
+            if tensor.dim() == 2 and tensor.shape[1] == 2:
+                return tensor.argmax(dim=1).float()
+            # Otherwise assume it's already scalar and convert to float
+            return tensor.float()
 
-        # Forward passes
+        # Convert scalar or one-hot observations to scalar floats
+        num_moves = observations['num_moves_played'].float().view(-1, 1)
+        can_win = observations['can_win_next'].float().view(-1, 1)
+        opponent_win = observations['opponent_can_win_next'].float().view(-1, 1)
+
+
+        # Debug: Print tensor shapes
+        # print("num_moves shape:", num_moves.shape)
+        # print("can_win shape:", can_win.shape)
+        # print("opponent_win shape:", opponent_win.shape)
+
+        # Stack scalars into a feature vector (batch_size, 3)
+        scalar_features = th.cat([num_moves, can_win, opponent_win], dim=1)
+
+        # Forward pass through respective networks
         cnn_out = self.linear_cnn(self.cnn(board))
         mask_out = self.mask_net(mask)
         scalar_out = self.scalar_net(scalar_features)
 
-        # Concatenate all
+        # Concatenate all features into a single tensor
         combined = th.cat([cnn_out, mask_out, scalar_out], dim=1)
 
+        # Final combined layer output
         return self.final_net(combined)
 
-
+# Define policy kwargs to use this custom feature extractor
 policy_kwargs = dict(
     features_extractor_class=CustomFeatureExtractorWithMask,
     features_extractor_kwargs=dict(features_dim=256)
 )
-

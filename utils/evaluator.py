@@ -6,7 +6,7 @@ from test.action_mask_ import mask_fn
 from training.advanced_training.config import *
 
 
-def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=None):
+def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200):
     """Evaluate the model against each opponent and return statistics."""
 
     unique_opponents = list(set(opponent_pool))
@@ -23,9 +23,9 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=
             pattern_victory_length=TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH,
             evaluation=True,
             first_play_rate=0.0,
-            lost_games_path="defeated_games.json",
+            lost_games_path=DEFEAT_PATH,
             review_ratio=0.0,
-            opponent_statistics_file=stats_path,
+            opponent_statistics_file=STATS_PATH,
         )
 
         env2 = TicTacToeTrainingEnv(
@@ -34,9 +34,9 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200, stats_path=
             pattern_victory_length=TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH,
             evaluation=True,
             first_play_rate=1.0,
-            lost_games_path="defeated_games.json",
+            lost_games_path=DEFEAT_PATH,
             review_ratio=0.0,
-            opponent_statistics_file=stats_path,
+            opponent_statistics_file=STATS_PATH,
         )
 
         wins_play_first = losses_play_first = draws_play_first = 0

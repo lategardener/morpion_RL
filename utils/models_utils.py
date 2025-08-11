@@ -68,6 +68,44 @@ def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_incr
     return improvements > regressions
 
 
+
+def get_last_model_number(models_dir):
+    """
+    Returns the highest model number found in all '.zip' filenames within the directory.
+
+    It assumes the model number is the last underscore-separated segment before '.zip'.
+
+    Example filename: model_3_3_7.zip -> returns 7
+
+    Args:
+        models_dir (str): path to the directory containing model files
+
+    Returns:
+        int: highest model number found, or 0 if no models exist
+    """
+    model_files = [
+        f for f in os.listdir(models_dir)
+        if f.endswith(".zip")
+    ]
+
+    max_num = 0  # Default if no models found
+
+    for f in model_files:
+        # Remove '.zip' and split by underscore
+        parts = f[:-4].split("_")
+        try:
+            # Take last part as model number
+            num = int(parts[-1])
+            if num > max_num:
+                max_num = num
+        except ValueError:
+            # Filename doesn’t match expected pattern, skip
+            pass
+
+    return max_num
+
+
+
 def exp_decay(initial_lr: float, final_lr: float = 1e-5) -> Callable[[float], float]:
     """
     Return an exponential decay function for learning rate scheduling.

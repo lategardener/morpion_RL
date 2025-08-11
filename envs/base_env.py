@@ -1,6 +1,5 @@
 from pathlib import Path
 import gymnasium as gym
-import numpy as np
 from matplotlib import patches
 import matplotlib.pyplot as plt
 import os

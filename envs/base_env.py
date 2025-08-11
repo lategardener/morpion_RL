@@ -52,8 +52,8 @@ class TicTacToeBaseEnv(gym.Env):
             "observation": gym.spaces.Box(low=0, high=3, shape=(board_length, board_length), dtype=np.int8),  # Board state
             "action_mask": gym.spaces.Box(low=0, high=1, shape=(board_length * board_length,), dtype=np.float32),  # Valid moves mask
             "num_moves_played": gym.spaces.Box(low=0.0, high=1.0, shape=(), dtype=np.float32),  # Proportion of board filled
-            "agent_can_win_next": gym.spaces.Discrete(2),  # Binary: can current player win next?
-            "opponent_can_win_next": gym.spaces.Discrete(2)  # Binary: can opponent win next?
+            "can_win_next": gym.spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
+            "opponent_can_win_next": gym.spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
         })
 
         # Reward for winning the game
@@ -97,9 +97,9 @@ class TicTacToeBaseEnv(gym.Env):
         return {
             "observation": self.gameboard.copy(),
             "action_mask": self.valid_actions().astype(np.float32),
-            "num_moves_played": self.num_moves_played,
-            "can_win_next": self.can_win_next,
-            "opponent_can_win_next": self.opponent_can_win_next
+            "num_moves_played": np.array(self.num_moves_played, dtype=np.float32),  # juste cast float32
+            "can_win_next": np.array([float(self.can_win_next)], dtype=np.float32),
+            "opponent_can_win_next": np.array([float(self.opponent_can_win_next)], dtype=np.float32),
         }
 
     def reset(self, seed=None, options=None):
@@ -184,9 +184,13 @@ class TicTacToeBaseEnv(gym.Env):
 
         # Can the next player win immediately?
         self.can_win_next = is_winning_move(self.player, self.gameboard, self.board_length, self.pattern_victory_length, self.valid_actions())
+        self.can_win_next = 0 if self.can_win_next is None else 1
+
 
         # Can the opponent (the player who just played) win immediately, meaning we need to block?
         self.opponent_can_win_next = is_winning_move(1 - self.player, self.gameboard, self.board_length, self.pattern_victory_length, self.valid_actions())
+        self.opponent_can_win_next = 0 if self.opponent_can_win_next is None else 1
+
 
         return self.get_observation(), reward, done, truncated, {}
 

@@ -29,4 +29,12 @@ class SmartRandomAgent:
         - The index of the chosen action (int).
         """
 
-        # Check if current pl
+        winning_move = is_winning_move(player, gameboard, board_length, pattern_victory_length, valid_moves)
+        blocking_move = is_winning_move(1 - player, gameboard, board_length, pattern_victory_length, valid_moves)
+
+        if winning_move is not None:
+            return winning_move
+        elif blocking_move is not None:
+            return blocking_move
+        return random.choice(valid_moves)
+

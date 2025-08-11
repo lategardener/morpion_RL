@@ -39,13 +39,6 @@ class TicTacToeBaseEnv(gym.Env):
         self.render_folder = None
         self.frame_index = 0
 
-        # Additional observation info:
-        # Proportion of board filled, and flags for whether the current player or opponent
-        # can win on the next move
-        self.num_moves_played = 0
-        self.can_win_next = 0
-        self.opponent_can_win_next = 0
-
         # Define action and observation spaces for the Gym environment
         self.action_space = gym.spaces.Discrete(board_length * board_length)  # One discrete action per cell
         self.observation_space = gym.spaces.Dict({
@@ -95,9 +88,7 @@ class TicTacToeBaseEnv(gym.Env):
         return {
             "observation": self.gameboard.copy(),
             "action_mask": self.valid_actions().astype(np.float32),
-            "num_moves_played": np.array(self.num_moves_played, dtype=np.float32),  # juste cast float32
-            "can_win_next": np.array([float(self.can_win_next)], dtype=np.float32),
-            "opponent_can_win_next": np.array([float(self.opponent_can_win_next)], dtype=np.float32),
+            "current_player": np.array(self.player, dtype=np.float32),  # juste cast float32
         }
 
     def reset(self, seed=None, options=None):
@@ -109,9 +100,6 @@ class TicTacToeBaseEnv(gym.Env):
         - returns the initial observation.
         """
         self.player = 0
-        self.can_win_next = 0
-        self.opponent_can_win_next = 0
-        self.num_moves_played = 0
         self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8)
         return self.get_observation(), {}
 
@@ -175,21 +163,6 @@ class TicTacToeBaseEnv(gym.Env):
 
         # Switch to the other player
         self.player = 1 - self.player
-
-        # Update auxiliary observation variables relative to the player who will play next:
-        # Proportion of filled cells
-        self.num_moves_played = np.count_nonzero(self.gameboard != EMPTY_CELL) / (self.board_length ** 2)
-
-        # Can the next player win immediately?
-        self.can_win_next = is_winning_move(self.player, self.gameboard, self.board_length, self.pattern_victory_length, self.valid_actions())
-        self.can_win_next = 0 if self.can_win_next is None else 1
-
-
-        # Can the opponent (the player who just played) win immediately, meaning we need to block?
-        self.opponent_can_win_next = is_winning_move(1 - self.player, self.gameboard, self.board_length, self.pattern_victory_length, self.valid_actions())
-        self.opponent_can_win_next = 0 if self.opponent_can_win_next is None else 1
-
-
         return self.get_observation(), reward, done, truncated, {}
 
     # ---------- Rendering ----------

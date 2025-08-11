@@ -1,8 +1,10 @@
 import os
-from pathlib import Path
 
 import torch.nn as nn
 from utils.models_utils import exp_decay
+import torch as th
+import torch.nn as nn
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 # ==============================
 # Training parameters
@@ -57,15 +59,85 @@ TOTAL_STEPS = 100_000  # Total training steps
 # Learning rate schedule (exponential decay)
 LR_SCHEDULE = exp_decay(3e-4, 1e-5)
 
-# ==============================
-# Policy architecture
-# ==============================
-POLICY_KWARGS = dict(
-    activation_fn=nn.ReLU,
-    net_arch=[dict(pi=[256, 256], vf=[256, 256])]
-)
 
 # ==============================
 # Base model naming
 # ==============================
 BASE_MODELS_NAME = f"model_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
+
+# ==============================
+# Policy architecture
+# ==============================
+class CustomFeatureExtractorWithMask(BaseFeaturesExtractor):
+    def __init__(self, observation_space, features_dim=256):
+        super().__init__(observation_space, features_dim)
+
+        action_mask_shape = observation_space['action_mask'].shape  # (board_length*board_length,)
+
+        # CNN to process the board (grayscale, so 1 channel)
+        self.cnn = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=3),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=3),
+            nn.ReLU(),
+            nn.Flatten(),
+        )
+
+        # Compute flattened CNN output size with dummy input
+        with th.no_grad():
+            sample_board = th.as_tensor(observation_space['observation'].sample()[None, None]).float()
+            n_flatten = self.cnn(sample_board).shape[1]
+
+        self.linear_cnn = nn.Sequential(
+            nn.Linear(n_flatten, 128),
+            nn.ReLU(),
+        )
+
+        # Small MLP for the action mask
+        self.mask_net = nn.Sequential(
+            nn.Linear(action_mask_shape[0], 64),
+            nn.ReLU(),
+        )
+
+        # Small MLP for scalar features (num_moves_played, agent_can_win_next, opponent_can_win_next)
+        self.scalar_net = nn.Sequential(
+            nn.Linear(3, 64),
+            nn.ReLU(),
+        )
+
+        # Combine all features
+        self.final_net = nn.Sequential(
+            nn.Linear(128 + 64 + 64, features_dim),  # CNN + mask + scalar features
+            nn.ReLU(),
+        )
+
+    def forward(self, observations):
+        # Process board: add channel dimension and convert to float
+        board = observations['observation'].unsqueeze(1).float()
+
+        # Process action mask
+        mask = observations['action_mask'].float()
+
+        # Stack scalar features into tensor (batch, 3)
+        scalar_features = th.stack([
+            observations['num_moves_played'].float(),
+            observations['agent_can_win_next'].float(),
+            observations['opponent_can_win_next'].float()
+        ], dim=1)
+
+        # Forward passes
+        cnn_out = self.linear_cnn(self.cnn(board))
+        mask_out = self.mask_net(mask)
+        scalar_out = self.scalar_net(scalar_features)
+
+        # Concatenate all
+        combined = th.cat([cnn_out, mask_out, scalar_out], dim=1)
+
+        return self.final_net(combined)
+
+
+policy_kwargs = dict(
+    features_extractor_class=CustomFeatureExtractorWithMask,
+    features_extractor_kwargs=dict(features_dim=256)
+)
+

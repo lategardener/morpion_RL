@@ -78,14 +78,14 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200):
                     if len(board_history) >= 3:
                         boards_to_save.append(board_history[-3])
                     else:
-                        # If no antepenultimate state, duplicate penultimate
+                        # If no ante penultimate state, duplicate penultimate
                         boards_to_save.append(board_history[-2])
 
                     for board in boards_to_save:
                         if board not in all_boards:
                             all_boards.append(board)
                             defeated_games.append({
-                                f"game_lose_against_{opponent}_{len(defeated_games)+1}": {
+                                f"{opponent}_{len(defeated_games)+1}": {
                                     "player": env.player,
                                     "board": board
                                 }

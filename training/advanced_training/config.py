@@ -52,7 +52,7 @@ GAMMA = 0.99  # Discount factor
 GAE_LAMBDA = 0.95  # GAE lambda for advantage estimation
 START_ENT_COEF = 0.02  # Initial entropy coefficient
 CHECKPOINT_INTERVAL = 10000  # Number of steps between checkpoints
-IMPROVEMENT_THRESHOLD = 0.04  # Threshold to consider an improvement
+IMPROVEMENT_THRESHOLD = 0.03  # Threshold to consider an improvement
 TOTAL_STEPS = 100_000  # Total training steps
 
 # Learning rate schedule (exponential decay)

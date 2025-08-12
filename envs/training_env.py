@@ -32,6 +32,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         self.opponent_pool = opponent_pool if opponent_pool else ["random"]
         self.opponent_models = self.preload_opponents(self.opponent_pool)  # Preload all opponents to avoid reloading from disk
         self.opponent_model = None
+        self.opponent_blows = []
+        self.agent_blows = []
 
         # Training and evaluation settings
         self.evaluation = evaluation
@@ -105,6 +107,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         self.opponent_model = self.opponent_models[chosen_opponent]
         self.number_turn = 0
         self.retrieve_lost_games = []
+        self.opponent_blows = []
+        self.agent_blows = []
 
         # Load past lost games for review mode
         if self.review_ratio > 0:
@@ -113,7 +117,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
                     with open(self.lost_games_path, "r") as file:
                         data = json.load(file)
                         for _, value in data.items():
-                            self.retrieve_lost_games.append([value["player"], value["board"]])
+                            self.retrieve_lost_games.append([value["player"], value["opponent_moves"]])
             except FileNotFoundError:
                 print(f"{RED}❌ No lost games file found. {RESET}")
 
@@ -129,6 +133,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             if self.turn != self.player:
                 self.first_to_play = False
                 opponent_action = self.get_opponent_action()
+                if self.evaluation:
+                    self.opponent_blows.append(opponent_action)
                 if opponent_action is not None:
                     obs, _, _, _, _ = super().step(opponent_action)
 
@@ -137,7 +143,10 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             lost_game_chosen = random.choice(self.retrieve_lost_games)
             self.player = lost_game_chosen[0]
             self.turn = self.player
-            self.set_gameboard(np.array(lost_game_chosen[1], dtype=np.int8))
+            if self.player == 1:
+                # Map action (integer) to 2D board coordinates (row, col)
+                line, column = divmod(lost_game_chosen[1].pop(0), self.board_length)
+                self.gameboard[line][column] = self.player
             self.first_to_play = (self.player == 0)
             return self.get_observation(), {}
 
@@ -180,6 +189,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
 
         # Agent's turn
         obs_agent, reward_agent, done_agent, truncated_agent, info_agent = super().step(action)
+        if self.evaluation:
+            self.agent_blows.append(action)
 
         if done_agent or truncated_agent:
             return obs_agent, self.victory_reward, done_agent, truncated_agent, info_agent
@@ -197,6 +208,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
 
         # Opponent's turn
         opponent_action = self.get_opponent_action()
+        if self.evaluation:
+            self.opponent_blows.append(opponent_action)
         obs_opponent, reward_opponent, done_opponent, truncated_opponent, _ = super().step(opponent_action)
 
         # If opponent wins or it's a draw

@@ -97,7 +97,7 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=200):
                     if board not in all_boards:
                         all_boards.append(board)
                         defeated_games.append({
-                            f"game_lose_against_{opponent}_{len(defeated_games)+1}": {
+                            f"{opponent}_{len(defeated_games)+1}": {
                                 "player": env.player,
                                 "board": board
                             }

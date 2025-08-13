@@ -51,9 +51,9 @@ DEFEAT_PATH = os.path.join(MODELS_DIR, "defeated_games.json")
 GAMMA = 0.99  # Discount factor
 GAE_LAMBDA = 0.95  # GAE lambda for advantage estimation
 START_ENT_COEF = 0.02  # Initial entropy coefficient
-CHECKPOINT_INTERVAL = 10000  # Number of steps between checkpoints
+CHECKPOINT_INTERVAL = 50000  # Number of steps between checkpoints
 IMPROVEMENT_THRESHOLD = 0.03  # Threshold to consider an improvement
-TOTAL_STEPS = 10000  # Total training steps
+TOTAL_STEPS = 200000  # Total training steps
 
 # Learning rate schedule (exponential decay)
 LR_SCHEDULE = exp_decay(3e-4, 1e-5)
@@ -67,52 +67,48 @@ BASE_MODELS_NAME = f"model_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PAT
 # ==============================
 # Policy architecture
 # ==============================
-class CustomFeatureExtractorWithPlayer(BaseFeaturesExtractor):
+import torch as th
+import torch.nn as nn
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+
+class CustomCNN(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim=256):
         super().__init__(observation_space, features_dim)
 
-        # Lightweight CNN to process the board (1 channel grayscale)
+        # Convolutional neural network to extract spatial features from the board state
+        # Input shape: (batch_size, 1, height, width) since the board is single-channel
         self.cnn = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=3, padding=1),  # 8 filters instead of 32
-            nn.ReLU(),
-            nn.Flatten(),
+            nn.Conv2d(1, 32, kernel_size=3, padding=1),  # Conv layer with 32 filters
+            nn.ReLU(),                                   # Activation function
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),# Conv layer with 64 filters
+            nn.ReLU(),                                   # Activation function
+            nn.Flatten(),                                # Flatten feature maps to vector
         )
 
-        # Compute the flattened CNN output size using a sample input
+        # Calculate the number of features after CNN layers by performing a forward pass
         with th.no_grad():
-            sample_board = th.as_tensor(observation_space['observation'].sample()[None, None]).float()
-            n_flatten = self.cnn(sample_board).shape[1]
+            sample = th.as_tensor(observation_space['observation'].sample()[None, None]).float()
+            n_flatten = self.cnn(sample).shape[1]
 
-        # Linear layer after CNN, smaller size
-        self.linear_cnn = nn.Sequential(
-            nn.Linear(n_flatten, 64),  # reduced from 128 to 64
-            nn.ReLU(),
-        )
-
-        # MLP for the current_player scalar input
-        self.player_net = nn.Sequential(
-            nn.Linear(1, 16),
-            nn.ReLU(),
-        )
-
-        # Combine CNN features and player info
-        self.final_net = nn.Sequential(
-            nn.Linear(64 + 16, features_dim),  # adjusted to the combined input size
+        # Fully connected layer to reduce feature dimensionality to desired size
+        self.linear = nn.Sequential(
+            nn.Linear(n_flatten, features_dim),
             nn.ReLU(),
         )
 
     def forward(self, observations):
-        board = observations['observation'].unsqueeze(1).float()    # (batch, 1, H, W)
-        current_player = observations['current_player'].float().view(-1, 1)  # (batch, 1)
+        # Extract the board state tensor from observations dict
+        # Add channel dimension for CNN input: (batch_size, height, width) -> (batch_size, 1, height, width)
+        x = observations['observation'].unsqueeze(1).float()
 
-        cnn_out = self.linear_cnn(self.cnn(board))
-        player_out = self.player_net(current_player)
+        # Pass through CNN layers
+        x = self.cnn(x)
 
-        combined = th.cat([cnn_out, player_out], dim=1)
-        return self.final_net(combined)
+        # Pass through fully connected layer to obtain final feature representation
+        return self.linear(x)
 
-# Define policy kwargs to use this custom feature extractor
+# Define policy keyword arguments to specify the custom feature extractor for PPO
 policy_kwargs = dict(
-    features_extractor_class=CustomFeatureExtractorWithPlayer,
+    features_extractor_class=CustomCNN,
     features_extractor_kwargs=dict(features_dim=256)
 )

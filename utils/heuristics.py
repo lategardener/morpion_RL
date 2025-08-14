@@ -746,9 +746,12 @@ def opponent_heuristic_points_calcul(opponentId, playerId, board, size, length_v
     """
     score = 0
     score += (
-            0.01 * number_of_semi_opened_threats(length_victory_pattern - 2, opponentId, playerId, board, size, length_victory_pattern) +
-            0.025 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, opponentId, playerId, board, size, length_victory_pattern) +
-            0.05 * number_of_opened_threats(length_victory_pattern - 2, opponentId, board, size)
+            0.05 * number_of_semi_opened_threats(length_victory_pattern - 2, opponentId, playerId, board, size, length_victory_pattern) +
+            # 0.01 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, opponentId, playerId, board, size, length_victory_pattern) +
+            0.05 * number_of_opened_threats(length_victory_pattern - 2, opponentId, board, size) +
+            0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, opponentId, playerId, board, size, length_victory_pattern) +
+            # 0.075 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 1, opponentId, playerId, board, size, length_victory_pattern) +
+            0.2 * number_of_opened_threats(length_victory_pattern - 1, opponentId, board, size)
     )
     return score
 
@@ -767,12 +770,12 @@ def agent_heuristic_points_calcul(playerId, opponentId, board, size, length_vict
     """
     score = 0
     score += (
-            0.01 * number_of_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
-            0.025 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
-            0.05 * number_of_opened_threats(length_victory_pattern - 2, playerId, board, size)
-            # 0.05 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
+            0.05 * number_of_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
+            # 0.01 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
+            0.05 * number_of_opened_threats(length_victory_pattern - 2, playerId, board, size) +
+            0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
             # 0.075 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
-            # 0.20 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
+            0.2 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
     )
     return score
 

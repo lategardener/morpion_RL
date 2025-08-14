@@ -772,7 +772,7 @@ def agent_heuristic_points_calcul(playerId, opponentId, board, size, length_vict
             1.2 * number_of_opened_threats(length_victory_pattern - 2, playerId, board, size) +
             2 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
             2 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
-            3 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
+            0.2 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
     )
     return score
 
@@ -793,21 +793,7 @@ def heuristic_points(playerId, opponentId, board, size, length_victory_pattern, 
     return bonus
 
 
-def estimate_heuristic_bounds(board_size, length_victory_pattern):
-    """
-    Estimate minimum and maximum heuristic score bounds based on board size and winning pattern length.
 
-    Parameters:
-    - board_size: size of the board (e.g., 3 for classic tic-tac-toe)
-    - length_victory_pattern: length of the winning pattern
-
-    Returns:
-    - (min_heuristic, max_heuristic): tuple representing the bounds of heuristic values
-    """
-    # Placeholder heuristic bounds; adjust based on specific weighting and board configuration
-    max_heuristic = 10000
-    min_heuristic = 0
-    return min_heuristic, max_heuristic
 
 
 

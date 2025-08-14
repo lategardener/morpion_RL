@@ -48,12 +48,12 @@ DEFEAT_PATH = os.path.join(MODELS_DIR, "defeated_games.json")
 # ==============================
 # Hyperparameters
 # ==============================
-GAMMA = 0.99  # Discount factor
+GAMMA = 0.95  # Discount factor
 GAE_LAMBDA = 0.95  # GAE lambda for advantage estimation
 START_ENT_COEF = 0.02  # Initial entropy coefficient
-CHECKPOINT_INTERVAL = 50000  # Number of steps between checkpoints
+CHECKPOINT_INTERVAL = 10000  # Number of steps between checkpoints
 IMPROVEMENT_THRESHOLD = 0.03  # Threshold to consider an improvement
-TOTAL_STEPS = 200000  # Total training steps
+TOTAL_STEPS = 100000  # Total training steps
 
 # Learning rate schedule (exponential decay)
 LR_SCHEDULE = exp_decay(3e-4, 1e-5)
@@ -71,44 +71,91 @@ import torch as th
 import torch.nn as nn
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
-class CustomCNN(BaseFeaturesExtractor):
-    def __init__(self, observation_space, features_dim=256):
+class CustomCNN3x3(BaseFeaturesExtractor):
+    """
+    Ultra-light CNN optimized for 3x3 TicTacToe:
+    - Encodes the board into 3 channels: agent, opponent, empty
+    - Single convolution layer
+    - Flatten + fully connected layer
+    """
+    def __init__(self, observation_space, features_dim=64):
         super().__init__(observation_space, features_dim)
 
-        # Convolutional neural network to extract spatial features from the board state
-        # Input shape: (batch_size, 1, height, width) since the board is single-channel
+        # Only one convolution is sufficient for a small 3x3 board
         self.cnn = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3, padding=1),  # Conv layer with 32 filters
-            nn.ReLU(),                                   # Activation function
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),# Conv layer with 64 filters
-            nn.ReLU(),                                   # Activation function
-            nn.Flatten(),                                # Flatten feature maps to vector
+            nn.Conv2d(3, 16, kernel_size=3, padding=1),  # 3 input channels → 16 feature maps
+            nn.ReLU(),
+            nn.Flatten(),
         )
 
-        # Calculate the number of features after CNN layers by performing a forward pass
+        # Dynamically compute the number of features after convolution
         with th.no_grad():
-            sample = th.as_tensor(observation_space['observation'].sample()[None, None]).float()
+            sample = th.zeros((1, 3) + observation_space['observation'].shape, dtype=th.float32)
             n_flatten = self.cnn(sample).shape[1]
 
-        # Fully connected layer to reduce feature dimensionality to desired size
+        # Fully connected layer for feature extraction
         self.linear = nn.Sequential(
             nn.Linear(n_flatten, features_dim),
             nn.ReLU(),
         )
 
     def forward(self, observations):
-        # Extract the board state tensor from observations dict
-        # Add channel dimension for CNN input: (batch_size, height, width) -> (batch_size, 1, height, width)
-        x = observations['observation'].unsqueeze(1).float()
+        # Extract board state and current player
+        board = observations['observation'].float()
+        player_id = observations['current_player'].long()
 
-        # Pass through CNN layers
+        batch_size, H, W = board.shape
+
+        # Create binary masks for agent pieces, opponent pieces, and empty cells
+        agent_mask = (board == player_id.view(-1, 1, 1)).float().unsqueeze(1)
+        opponent_mask = (board == (1 - player_id).view(-1, 1, 1)).float().unsqueeze(1)
+        empty_mask = (board == 3).float().unsqueeze(1)
+
+        # Concatenate masks along the channel dimension: (batch, 3, H, W)
+        x = th.cat([agent_mask, opponent_mask, empty_mask], dim=1)
+
+        # Forward pass through CNN + fully connected layer
         x = self.cnn(x)
-
-        # Pass through fully connected layer to obtain final feature representation
         return self.linear(x)
 
-# Define policy keyword arguments to specify the custom feature extractor for PPO
+class CustomMLP3x3(BaseFeaturesExtractor):
+    """
+    MLP for 3x3 TicTacToe with normalized board:
+    - +1 for current player's pieces
+    - -1 for opponent's pieces
+    - 0 for empty cells
+    """
+    def __init__(self, observation_space, features_dim=64):
+        super().__init__(observation_space, features_dim)
+        input_dim = observation_space['observation'].shape[0] * observation_space['observation'].shape[1]
+
+        # Simple 2-layer MLP
+        self.mlp = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, features_dim),
+            nn.ReLU()
+        )
+
+    def forward(self, observations):
+        """
+        Convert board to -1,0,+1 depending on current player.
+        observations: dict with 'observation' (board) and 'current_player'
+        """
+        board = observations['observation'].float()
+        player_id = observations['current_player'].long().view(-1, 1, 1)  # shape: (batch,1,1)
+
+        # Map values to -1,0,+1
+        # If cell == current player -> 1
+        # If cell == opponent -> -1
+        # If cell == empty (3) -> 0
+        normalized_board = th.where(board == player_id, th.ones_like(board), th.where(board == (1 - player_id), -th.ones_like(board), th.zeros_like(board)))
+
+        return self.mlp(normalized_board)
+
+# Stable-Baselines3 policy kwargs
 policy_kwargs = dict(
-    features_extractor_class=CustomCNN,
-    features_extractor_kwargs=dict(features_dim=256)
+    features_extractor_class=CustomMLP3x3,
+    features_extractor_kwargs=dict(features_dim=64)
 )

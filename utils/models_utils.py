@@ -27,7 +27,7 @@ def get_models(path):
     return sorted(model_files, key=extract_number)
 
 
-def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_increase=0.05):
+def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_increase=0.01):
     """
     Decide whether to save the current model based only on defeat rate comparison.
 
@@ -54,7 +54,7 @@ def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_incr
             regressions += 1
 
     # Save if improvements exceed regressions
-    return improvements >= regressions
+    return improvements > regressions
 
 
 

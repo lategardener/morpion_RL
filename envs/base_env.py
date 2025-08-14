@@ -124,15 +124,16 @@ class TicTacToeBaseEnv(gym.Env):
             print(f"Gameboard:\n{self.gameboard}")
             raise ValueError("Invalid action: cell already occupied.")
 
-        # Map action (integer) to 2D board coordinates (row, col)
-        line, column = divmod(action, self.board_length)
-        self.gameboard[line][column] = self.player
 
         # Check if this move could lead to a winning opportunity
         possible_win = is_winning_move(
             self.player, self.gameboard, self.board_length,
             self.pattern_victory_length, self.valid_actions()
         )
+
+        # Map action (integer) to 2D board coordinates (row, col)
+        line, column = divmod(action, self.board_length)
+        self.gameboard[line][column] = self.player
 
         # Check for victory by evaluating lines, columns, and diagonals
         if (

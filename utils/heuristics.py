@@ -810,22 +810,6 @@ def estimate_heuristic_bounds(board_size, length_victory_pattern):
     return min_heuristic, max_heuristic
 
 
-def normalize(value, board_size, length_victory_pattern):
-    """
-    Normalize a heuristic value to a 0-1 scale based on estimated heuristic bounds.
-
-    Parameters:
-    - value: heuristic value to normalize
-    - board_size: size of the board
-    - length_victory_pattern: length of the winning pattern
-
-    Returns:
-    - Normalized value between 0 and 1
-    """
-    min_val, max_val = estimate_heuristic_bounds(board_size, length_victory_pattern)
-    return (value - min_val) / (max_val - min_val)
-
-
 
 
 

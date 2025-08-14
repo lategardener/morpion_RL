@@ -22,7 +22,8 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=1000):
     """
 
     # Keep track of defeated games (max 20)
-    MAX_SAVED_DEFEATS = 20
+    MAX_SAVED_DEFEATS = 5
+    registered = 0
     defeated_games = deque(maxlen=MAX_SAVED_DEFEATS)
 
     results = {}
@@ -73,14 +74,16 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=1000):
 
             # Record a lost game
             if reward == -env.victory_reward:
-                defeated_games.append({
-                    f"game_lost_{len(defeated_games)+1}": {
-                        "player": env.player,
-                        "opponent": opponent,
-                        "opponent_moves": [int(move) for move in env.opponent_blows],
-                        "agent_moves": [int(move) for move in env.agent_blows]
-                    }
-                })
+                registered += 1
+                if registered < 5:
+                    defeated_games.append({
+                        f"game_lost_{len(defeated_games)+1}": {
+                            "player": env.player,
+                            "opponent": opponent,
+                            "opponent_moves": [int(move) for move in env.opponent_blows],
+                            "agent_moves": [int(move) for move in env.agent_blows]
+                        }
+                    })
 
                 if env.first_to_play:
                     losses_first += 1

@@ -769,14 +769,24 @@ def agent_heuristic_points_calcul(playerId, opponentId, board, size, length_vict
     - Opened threats (length - 1)
     """
     score = 0
-    score += (
-            0.05 * number_of_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
-            # 0.01 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
-            0.05 * number_of_opened_threats(length_victory_pattern - 2, playerId, board, size) +
-            0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
-            # 0.075 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
-            0.2 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
-    )
+    if size == 3:
+        score += (
+                0.05 * number_of_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
+                # 0.01 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
+                0.05 * number_of_opened_threats(length_victory_pattern - 2, playerId, board, size) +
+                0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
+                # 0.075 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
+                0.2 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
+        )
+    else:
+        score += (
+                0.05 * number_of_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
+                0.06 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
+                0.05 * number_of_opened_threats(length_victory_pattern - 2, playerId, board, size) +
+                0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
+                0.09 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
+                0.15 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
+        )
     return score
 
 
@@ -790,7 +800,7 @@ def heuristic_points(playerId, opponentId, board, size, length_victory_pattern, 
     if is_winning_move(opponentId, board, size, length_victory_pattern, authorized_moves) is not None:
         return REWARD_ALLOW_OPP_WIN
 
-    reward = agent_heuristic_points_calcul(playerId, opponentId, board, size, length_victory_pattern) - opponent_heuristic_points_calcul(opponentId, playerId, board, size, length_victory_pattern)
+    reward = agent_heuristic_points_calcul(playerId, opponentId, board, size, length_victory_pattern) - agent_heuristic_points_calcul(opponentId, playerId, board, size, length_victory_pattern)
     return reward
 
 

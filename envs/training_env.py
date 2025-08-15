@@ -62,28 +62,40 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             return json.load(f)
 
     def calculate_opponent_probabilities(self):
-        """Calculate weighted probabilities for opponent selection based on defeat rate."""
+        """
+        Calculate opponent selection probabilities using an 80/20 split:
+        - 80% of the probability is distributed equally among all opponents
+        - 20% is distributed proportionally according to the opponent's defeat rate
+        Ensures all opponents have a non-zero chance of being selected.
+        """
         probs = {}
-        epsilon = 0.05  # Avoid zero probability
+        n = len(self.opponent_models)
 
+        # 1. Equal share portion (80%)
+        equal_share = 0.8 / n
+
+        # 2. Compute total defeat rate for proportional share (20%)
+        total_defeat = sum(self.opponent_statistics.get(opponent, {"defeat_rate": 1.0})["defeat_rate"]
+                           for opponent in self.opponent_models)
+
+        # 3. Calculate probabilities
         for opponent in self.opponent_models:
-            stats = self.opponent_statistics.get(opponent, {"defeat_rate": 1.0})
-            defeat_rate = stats.get("defeat_rate", 1.0)
-            probs[opponent] = defeat_rate + epsilon
+            defeat_rate = self.opponent_statistics.get(opponent, {"defeat_rate": 1.0})["defeat_rate"]
+            proportional_share = 0.2 * (defeat_rate / total_defeat) if total_defeat > 0 else 0
+            probs[opponent] = equal_share + proportional_share
 
-        # Normalize probabilities
+        # 4. Normalize to ensure total probability sums to 1
         total = sum(probs.values())
         for k in probs:
             probs[k] /= total
 
         return probs
 
+
     def choose_opponent(self):
         """Randomly select an opponent using weighted probabilities."""
         opponents = list(self.opponent_probabilities.keys())
         weights = list(self.opponent_probabilities.values())
-        if random.random() < 0.001:
-            print(f"{BLUE}**********{weights}*******{RESET}")
         return random.choices(opponents, weights=weights, k=1)[0]
 
     def preload_opponents(self, opponent_pool):
@@ -137,7 +149,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
                             value["opponent_moves"]
                         ])
             except FileNotFoundError:
-                print(f"{RED}❌ No lost games file found. {RESET}")
+                pass
+                # print(f"{RED}❌ No lost games file found. {RESET}")
 
         # -----------------------------
         # Decide between normal or review game

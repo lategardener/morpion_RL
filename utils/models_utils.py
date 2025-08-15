@@ -48,9 +48,9 @@ def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_incr
             return False
 
         # Count tolerable improvements and regressions on defeat rate
-        if current_defeat < best_defeat:
+        if current_defeat <= best_defeat:
             improvements += 1
-        elif current_defeat > best_defeat:
+        elif current_defeat > best_defeat + 0.008:
             regressions += 1
 
     # Save if improvements exceed regressions

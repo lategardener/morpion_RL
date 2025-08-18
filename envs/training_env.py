@@ -1,7 +1,5 @@
 import json
 import random
-import os
-import numpy as np
 
 from agents import RandomAgent, SmartRandomAgent, PPOAgent
 from envs.base_env import *
@@ -13,8 +11,11 @@ from training.advanced_training.config import (
 
 class TicTacToeTrainingEnv(TicTacToeBaseEnv):
     """
-    Extended TicTacToe environment for training agents against various opponents.
-    Supports weighted opponent selection, replaying past losing games, and evaluation mode.
+    Extended TicTacToe environment for training RL agents.
+    - Supports multiple opponent types (Random, SmartRandom, PPO-based agents)
+    - Allows weighted opponent selection based on defeat statistics
+    - Supports review mode (replaying past losing games)
+    - Provides evaluation mode for logging agent and opponent actions
     """
 
     def __init__(self,
@@ -28,18 +29,32 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
                  lost_games_path=None,
                  review_ratio=DEFAULT_REVIEW_RATIO,
                  opponent_statistics_file=None):
+        """
+        Initialize the training environment.
 
+        Parameters:
+        - board_length (int): size of the board (NxN)
+        - pattern_victory_length (int): number of consecutive marks to win
+        - render_mode (str): "ansi" or "matplotlib" rendering
+        - victory_reward (float): reward for winning the game
+        - opponent_pool (list[str]): list of opponent types or model paths
+        - evaluation (bool): if True, logs agent and opponent moves
+        - first_play_rate (float): probability that the agent plays first
+        - lost_games_path (str): JSON file path containing past lost games
+        - review_ratio (float): probability of replaying a lost game
+        - opponent_statistics_file (str): JSON file path with opponent statistics
+        """
         super().__init__(board_length, pattern_victory_length, render_mode, victory_reward)
 
         # Opponent configuration
         self.opponent_pool = opponent_pool if opponent_pool else ["random"]
-        self.opponent_models = self.preload_opponents(self.opponent_pool)  # Preload all opponents
-        self.opponent_model = None
-        self.opponent_blows = []
-        self.opponent_load_blows = None
-        self.agent_blows = []
+        self.opponent_models = self.preload_opponents(self.opponent_pool)  # Preload opponent instances
+        self.opponent_model = None  # Current opponent for the episode
+        self.opponent_blows = []    # Track opponent moves for evaluation
+        self.opponent_load_blows = None  # Moves loaded from past losing games
+        self.agent_blows = []       # Track agent moves for evaluation
 
-        # Training and evaluation settings
+        # Training settings
         self.evaluation = evaluation
         self.first_play_rate = first_play_rate
         self.lost_games_path = lost_games_path
@@ -53,9 +68,11 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
     # ---------------------------
     # Opponent statistics
     # ---------------------------
-
     def load_opponent_statistics(self, filepath):
-        """Load opponent statistics from a JSON file."""
+        """
+        Load opponent statistics from JSON file.
+        Returns empty dict if file does not exist.
+        """
         if filepath is None or not os.path.exists(filepath):
             return {}
         with open(filepath, "r") as f:
@@ -63,43 +80,50 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
 
     def calculate_opponent_probabilities(self):
         """
-        Calculate opponent selection probabilities using an 80/20 split:
-        - 80% of the probability is distributed equally among all opponents
-        - 20% is distributed proportionally according to the opponent's defeat rate
-        Ensures all opponents have a non-zero chance of being selected.
+        Calculate opponent selection probabilities.
+        - 80% equally distributed among all opponents
+        - 20% distributed proportionally to opponent's defeat rate
+        Returns a normalized dictionary of probabilities.
         """
         probs = {}
         n = len(self.opponent_models)
 
-        # 1. Equal share portion (80%)
+        # Equal portion (80%)
         equal_share = 0.8 / n
 
-        # 2. Compute total defeat rate for proportional share (20%)
+        # Total defeat rate for proportional portion (20%)
         total_defeat = sum(self.opponent_statistics.get(opponent, {"defeat_rate": 1.0})["defeat_rate"]
                            for opponent in self.opponent_models)
 
-        # 3. Calculate probabilities
+        # Compute total probabilities
         for opponent in self.opponent_models:
             defeat_rate = self.opponent_statistics.get(opponent, {"defeat_rate": 1.0})["defeat_rate"]
             proportional_share = 0.2 * (defeat_rate / total_defeat) if total_defeat > 0 else 0
             probs[opponent] = equal_share + proportional_share
 
-        # 4. Normalize to ensure total probability sums to 1
+        # Normalize probabilities
         total = sum(probs.values())
         for k in probs:
             probs[k] /= total
 
         return probs
 
-
     def choose_opponent(self):
-        """Randomly select an opponent using weighted probabilities."""
+        """
+        Randomly select an opponent using weighted probabilities.
+        Returns the opponent key (string).
+        """
         opponents = list(self.opponent_probabilities.keys())
         weights = list(self.opponent_probabilities.values())
         return random.choices(opponents, weights=weights, k=1)[0]
 
     def preload_opponents(self, opponent_pool):
-        """Preload opponent agents/models to avoid repeated disk access."""
+        """
+        Preload opponent agents to avoid repeated disk access.
+        - RandomAgent and SmartRandomAgent are instantiated directly
+        - PPOAgent loaded from .zip model file
+        Returns a dict of opponent instances.
+        """
         models = {}
         for opponent in opponent_pool:
             if opponent == "random":
@@ -113,24 +137,23 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
     # ---------------------------
     # Environment control
     # ---------------------------
-
     def reset(self, seed=None, options=None):
         """
-        Start a new episode:
-        - Select an opponent
+        Reset the environment for a new episode.
+        - Select opponent
         - Optionally load a past losing game (review mode)
-        - Or start a normal game if no lost games exist or random chance
+        - Or start normal game
+        Returns initial observation and info.
         """
-        # Call base reset to initialize the board
         obs, info = super().reset(seed, options)
 
-        # Select opponent for this episode
+        # Choose opponent
         chosen_opponent = self.choose_opponent()
         self.opponent_model = self.opponent_models[chosen_opponent]
         self.opponent_statistics = self.load_opponent_statistics(self.opponent_statistics_file)
         self.opponent_probabilities = self.calculate_opponent_probabilities()
 
-        # Initialize tracking variables
+        # Tracking variables
         self.number_turn = 0
         self.retrieve_lost_games = []
         self.opponent_blows = []
@@ -150,7 +173,6 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
                         ])
             except FileNotFoundError:
                 pass
-                # print(f"{RED}❌ No lost games file found. {RESET}")
 
         # -----------------------------
         # Decide between normal or review game
@@ -161,7 +183,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             self.turn = 0 if self.draw <= self.first_play_rate else 1
             self.first_to_play = (self.turn == 0)
 
-            # If opponent plays first
+            # Opponent plays first if needed
             if not self.first_to_play:
                 opponent_action = self.get_opponent_action()
                 if self.evaluation:
@@ -176,11 +198,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         # -----------------------------
         lost_game_chosen = random.choice(self.retrieve_lost_games)
         self.player = lost_game_chosen[0]
-
-        # Create a copy of opponent moves for the current game
         self.opponent_load_blows = lost_game_chosen[1].copy()
-
-        # Keep the original list for file deletion if needed
         self.opponent_load_blows_original = lost_game_chosen[1]
 
         # Apply first move if agent is player 1
@@ -191,10 +209,13 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         self.first_to_play = (self.player == 0)
         return self.get_observation(), {}
 
-
-
     def get_opponent_action(self):
-        """Return the opponent's move based on its model type."""
+        """
+        Return opponent's move based on its type:
+        - PPOAgent uses its play() method with observation
+        - RandomAgent or SmartRandomAgent uses board info and valid moves
+        Raises ValueError if opponent model invalid.
+        """
         valid_moves = np.where(self.valid_actions() == 1)[0]
 
         if hasattr(self.opponent_model, "play"):
@@ -212,13 +233,12 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
 
         raise ValueError("❌ Invalid opponent model!")
 
-
     def step(self, action):
         """
-        Process the agent's action and then the opponent's action.
-        Rewards are assigned based on game outcome and special events (e.g., blocking an imminent opponent win).
-        If the agent deviates from a pre-recorded losing game, that specific game is removed from the JSON file
-        using the original moves list.
+        Process agent action and opponent action sequentially.
+        - Reward agent for blocking opponent wins
+        - Remove past game from replay if agent deviates
+        Returns: observation, reward, done, truncated, info
         """
         valid_moves = np.where(self.valid_actions() == 1)[0]
 
@@ -241,7 +261,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         if done_agent or truncated_agent:
             return obs_agent, self.victory_reward, done_agent, truncated_agent, info_agent
 
-        # Reward for blocking an imminent opponent win
+        # Reward for blocking imminent opponent win
         if opponent_win_before_moving is not None:
             valid_moves_after_play = np.where(self.valid_actions() == 1)[0]
             opponent_win_after_moving = is_winning_move(
@@ -259,10 +279,9 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             opponent_action = self.opponent_load_blows.pop(0)
             valid_moves = np.where(self.valid_actions() == 1)[0]
             if opponent_action not in valid_moves:
-                # Agent deviated from pre-recorded game; choose a new valid action
+                # Agent deviated from past game, generate new move
                 opponent_action = self.get_opponent_action()
-                # Disable further replay for this episode
-                self.opponent_load_blows = None
+                self.opponent_load_blows = None  # disable further replay
 
         else:
             opponent_action = self.get_opponent_action()
@@ -272,11 +291,9 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
 
         obs_opponent, reward_opponent, done_opponent, truncated_opponent, _ = super().step(opponent_action)
 
-        # Check for opponent win or draw
+        # Adjust reward if opponent wins or draw
         if done_opponent:
             final_reward = -self.victory_reward if reward_opponent == self.victory_reward else 0
             return obs_opponent, final_reward, done_opponent, truncated_opponent, info_agent
 
         return obs_opponent, reward_agent, done_opponent, truncated_opponent, info_agent
-
-

@@ -9,8 +9,8 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 # ==============================
 # Training parameters
 # ==============================
-TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH = 4
-TRAINING_DEFAULT_BOARD_LENGTH = 5
+TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH = 3
+TRAINING_DEFAULT_BOARD_LENGTH = 3
 TRAINING_DEFAULT_FIRST_PLAY_RATE = 0.5
 TRAINING_DEFAULT_REVIEW_RATIO = 0.0
 

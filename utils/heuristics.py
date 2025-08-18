@@ -735,47 +735,26 @@ def is_winning_move(playerId, board, size, pattern_victory_length, authorized_mo
 
 # -------------------------------------- HEURISTIC -----------------------------------------
 
-def opponent_heuristic_points_calcul(opponentId, playerId, board, size, length_victory_pattern):
+def heuristic_points_calcul(playerId, opponentId, board, size, length_victory_pattern):
     """
-    Calculate the heuristic score based on the opponent's threats on the board.
+    Compute a heuristic score representing the strength of the player's position on the board.
 
-    The score is a weighted sum of:
-    - Semi-opened threats (length - 2)
-    - Dangerous semi-opened threats (length - 2)
-    - Opened threats (length - 2)
-    """
-    score = 0
-    score += (
-            0.05 * number_of_semi_opened_threats(length_victory_pattern - 2, opponentId, playerId, board, size, length_victory_pattern) +
-            # 0.01 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, opponentId, playerId, board, size, length_victory_pattern) +
-            0.05 * number_of_opened_threats(length_victory_pattern - 2, opponentId, board, size) +
-            0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, opponentId, playerId, board, size, length_victory_pattern) +
-            # 0.075 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 1, opponentId, playerId, board, size, length_victory_pattern) +
-            0.2 * number_of_opened_threats(length_victory_pattern - 1, opponentId, board, size)
-    )
-    return score
-
-
-def agent_heuristic_points_calcul(playerId, opponentId, board, size, length_victory_pattern):
-    """
-    Calculate the heuristic score based on the agent's own threats on the board.
-
-    The score is a weighted sum of:
-    - Semi-opened threats (length - 2)
-    - Dangerous semi-opened threats (length - 2)
-    - Opened threats (length - 2)
+    The score is a weighted sum of potential threats:
+    - Semi-opened threats (length - 2): sequences of the player's pieces that are almost forming a winning pattern.
+    - Dangerous semi-opened threats (length - 2): sequences that could lead to opponent winning quickly.
+    - Opened threats (length - 2): sequences with open ends that can be extended.
     - Semi-opened threats (length - 1)
     - Dangerous semi-opened threats (length - 1)
     - Opened threats (length - 1)
+
+    The weights differ depending on board size (3x3 vs larger boards) to adjust the importance of each type of threat.
     """
     score = 0
     if size == 3:
         score += (
                 0.05 * number_of_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
-                # 0.01 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
                 0.05 * number_of_opened_threats(length_victory_pattern - 2, playerId, board, size) +
                 0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
-                # 0.075 * number_of_dangerous_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
                 0.2 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
         )
     else:
@@ -790,17 +769,20 @@ def agent_heuristic_points_calcul(playerId, opponentId, board, size, length_vict
     return score
 
 
-def heuristic_points(playerId, opponentId, board, size, length_victory_pattern, authorized_moves):
+def cost_function(playerId, opponentId, board, size, length_victory_pattern, authorized_moves):
     """
-    Evaluate heuristic reward or penalty based on immediate winning moves:
-    - If opponent has a winning move available, return penalty (REWARD_ALLOW_OPP_WIN).
-    - If agent has a winning move available, return bonus (REWARD_CREATE_THREAT).
-    - Otherwise, return zero.
+    Compute a heuristic reward or penalty for the current board state.
+
+    Logic:
+    - If the opponent has an immediate winning move, return a penalty (REWARD_ALLOW_OPP_WIN).
+    - If the agent has potential threats, calculate a net heuristic score:
+        heuristic_score = player's threat score - opponent's threat score
+    - This net score helps guide the agent towards moves that increase its advantage and block opponent threats.
     """
     if is_winning_move(opponentId, board, size, length_victory_pattern, authorized_moves) is not None:
         return REWARD_ALLOW_OPP_WIN
 
-    reward = agent_heuristic_points_calcul(playerId, opponentId, board, size, length_victory_pattern) - agent_heuristic_points_calcul(opponentId, playerId, board, size, length_victory_pattern)
+    reward = heuristic_points_calcul(playerId, opponentId, board, size, length_victory_pattern) - heuristic_points_calcul(opponentId, playerId, board, size, length_victory_pattern)
     return reward
 
 

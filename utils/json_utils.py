@@ -5,8 +5,11 @@ from training.config import *
 def convert_to_serializable(obj):
     """
     Convert numpy objects to native Python types for JSON serialization.
-    - Converts numpy arrays to lists
-    - Converts numpy ints and floats to native int and float
+
+    Handles:
+    - Numpy arrays -> Python lists
+    - Numpy integers -> Python int
+    - Numpy floats -> Python float
     - Recursively converts dictionaries and lists
     """
     if isinstance(obj, np.ndarray):
@@ -24,10 +27,11 @@ def convert_to_serializable(obj):
 def load_opponent_stats(opponents, stats_path=STATS_PATH):
     """
     Load opponent statistics from a JSON file.
-    If the file doesn't exist, initialize an empty dictionary.
-    For each opponent, if not present, add default stats:
-    - defeat_rate = 1.0
-    - victory_rate = 0.0
+
+    - Initializes an empty dictionary if the file doesn't exist.
+    - Ensures each opponent has default stats if missing:
+        - defeat_rate = 1.0
+        - victory_rate = 0.0
     """
     if os.path.exists(stats_path):
         with open(stats_path, "r") as f:
@@ -42,7 +46,9 @@ def load_opponent_stats(opponents, stats_path=STATS_PATH):
 
 def save_opponent_stats(best_stats, stats_path):
     """
-    Save opponent statistics into a JSON file with indentation for readability.
+    Save opponent statistics to a JSON file.
+
+    - Uses indentation for better readability.
     """
     with open(stats_path, "w") as f:
         json.dump(best_stats, f, indent=4)

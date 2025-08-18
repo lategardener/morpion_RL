@@ -2,7 +2,7 @@ import json
 from collections import deque
 from envs import TicTacToeTrainingEnv
 from test.action_mask_ import mask_fn
-from training.advanced_training.config import *
+from training.config import *
 
 
 def evaluate_model_by_opponent(model, opponent_pool, n_episodes=1000):

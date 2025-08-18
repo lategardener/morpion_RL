@@ -3,7 +3,7 @@ import random
 
 from agents import RandomAgent, SmartRandomAgent, PPOAgent
 from envs.base_env import *
-from training.advanced_training.config import (
+from training.config import (
     TRAINING_DEFAULT_BOARD_LENGTH,
     TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH
 )

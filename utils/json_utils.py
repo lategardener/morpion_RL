@@ -1,7 +1,6 @@
 import numpy as np
-import os
 import json
-from training.advanced_training.config import *
+from training.config import *
 
 def convert_to_serializable(obj):
     """

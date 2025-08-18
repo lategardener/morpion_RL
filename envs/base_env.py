@@ -164,7 +164,7 @@ class TicTacToeBaseEnv(gym.Env):
             reward = 0
             done = True
         else:
-            reward = REWARD_MISSED_WIN if possible_win else heuristic_points(
+            reward = REWARD_MISSED_WIN if possible_win else cost_function(
                 str(self.player), str(1 - self.player),
                 self.gameboard, self.board_length,
                 self.pattern_victory_length, self.valid_actions()

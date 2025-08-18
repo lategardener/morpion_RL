@@ -14,41 +14,54 @@ from utils.terminal_colors import *
 class TicTacToeBaseEnv(gym.Env):
     """
     Base TicTacToe environment.
-    Manages the game mechanics, rewards, and rendering modes (ANSI terminal or Matplotlib image).
+
+    Handles:
+    - Game mechanics
+    - Reward calculation
+    - Rendering modes (ANSI terminal or Matplotlib images)
+
+    Metadata:
+    - 'render_modes': list of available rendering modes
     """
 
     metadata = {'render_modes': ['ansi', 'matplotlib']}
 
-    def __init__(self, board_length=DEFAULT_BOARD_LENGTH,
+    def __init__(self,
+                 board_length=DEFAULT_BOARD_LENGTH,
                  pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH,
                  render_mode=DEFAULT_RENDER_MODE,
                  victory_reward=REWARD_VICTORY):
+        """
+        Initialize the TicTacToe environment.
 
-        # Current player to play (0 or 1)
-        self.player = 0
+        Parameters:
+        - board_length (int): Size of the board (NxN).
+        - pattern_victory_length (int): Number of consecutive marks needed to win.
+        - render_mode (str): 'ansi' for terminal display, 'matplotlib' for image render.
+        - victory_reward (float): Reward given when a player wins.
+        """
 
-        # Board configuration
-        self.board_length = board_length  # Board size (NxN)
-        self.pattern_victory_length = pattern_victory_length  # Number of consecutive marks needed to win
-        self.render_mode = render_mode  # Rendering mode: 'ansi' or 'matplotlib'
+        self.player = 0  # Current player to play (0 or 1)
+        self.board_length = board_length
+        self.pattern_victory_length = pattern_victory_length
+        self.render_mode = render_mode
 
-        # Initialize the game board with EMPTY_CELL values
+        # Game board initialized to EMPTY_CELL (usually -1 or 0)
         self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8)
 
-        # Rendering state: folder and frame index for saving images
+        # Rendering state (folder to save images and frame index)
         self.render_folder = None
         self.frame_index = 0
 
-        # Define action and observation spaces for the Gym environment
-        self.action_space = gym.spaces.Discrete(board_length * board_length)  # One discrete action per cell
+        # Gym environment spaces
+        self.action_space = gym.spaces.Discrete(board_length * board_length)
         self.observation_space = gym.spaces.Dict({
-            "observation": gym.spaces.Box(low=0, high=3, shape=(board_length, board_length), dtype=np.int8),  # Board state
-            "action_mask": gym.spaces.Box(low=0, high=1, shape=(board_length * board_length,), dtype=np.float32),  # Valid moves mask
-            "current_player": gym.spaces.Box(low=0.0, high=1.0, shape=(), dtype=np.float32),  # Proportion of board filled
+            "observation": gym.spaces.Box(low=0, high=3, shape=(board_length, board_length), dtype=np.int8),
+            "action_mask": gym.spaces.Box(low=0, high=1, shape=(board_length * board_length,), dtype=np.float32),
+            "current_player": gym.spaces.Box(low=0.0, high=1.0, shape=(), dtype=np.float32),
         })
 
-        # Reward for winning the game
-        self.victory_reward = victory_reward
+        self.victory_reward = victory_reward  # Reward for winning the game
 
     # ---------- Getters and setters ----------
     def set_player(self, p):
@@ -56,22 +69,24 @@ class TicTacToeBaseEnv(gym.Env):
         self.player = p
 
     def get_player(self):
-        """Get the current player."""
+        """Return the current player."""
         return self.player
 
     def set_gameboard(self, gameboard):
-        """Set the gameboard state."""
+        """Set the current gameboard state."""
         self.gameboard = gameboard
 
     def get_gameboard(self):
-        """Get a copy of the gameboard."""
+        """Return a copy of the current gameboard."""
         return self.gameboard
 
     # ---------- Game logic ----------
     def valid_actions(self):
         """
-        Returns a binary mask indicating which actions are valid (empty cells).
-        Shape: (board_length * board_length,)
+        Returns a binary mask of valid actions (empty cells).
+
+        Output:
+        - mask (np.array, shape=(board_length*board_length,)): 1 if cell empty, 0 otherwise
         """
         mask = np.zeros(self.board_length * self.board_length, dtype=np.int8)
         mask[np.where(self.gameboard.flatten() == EMPTY_CELL)[0]] = 1
@@ -79,25 +94,26 @@ class TicTacToeBaseEnv(gym.Env):
 
     def get_observation(self):
         """
-        Returns the current observation as a dictionary, containing:
-        - the current board state,
-        - valid action mask,
-        - proportion of moves played,
-        - flags for immediate win opportunities for current player and opponent.
+        Returns current observation dictionary.
+
+        Dictionary contains:
+        - 'observation': current board state (NxN)
+        - 'action_mask': valid moves mask (flattened)
+        - 'current_player': current player (float32)
         """
         return {
             "observation": self.gameboard.copy(),
             "action_mask": self.valid_actions().astype(np.float32),
-            "current_player": np.array(self.player, dtype=np.float32),  # juste cast float32
+            "current_player": np.array(self.player, dtype=np.float32),
         }
 
     def reset(self, seed=None, options=None):
         """
-        Resets the environment to the initial state:
-        - clears the board,
-        - resets player to 0,
-        - resets auxiliary observation variables,
-        - returns the initial observation.
+        Reset the environment to initial state.
+
+        Returns:
+        - observation (dict): initial observation
+        - info (dict): optional info
         """
         self.player = 0
         self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8)
@@ -105,37 +121,37 @@ class TicTacToeBaseEnv(gym.Env):
 
     def step(self, action):
         """
-        Executes one game step:
-        - Places the current player's mark on the board,
-        - Checks for victory or draw,
-        - Updates auxiliary state variables,
-        - Switches the player to the next one,
-        - Returns observation, reward, done flag, truncated flag, and info dict.
-        """
+        Apply a player's action to the board.
 
+        Parameters:
+        - action (int): index of the cell to place the mark (0..board_length*board_length-1)
+
+        Returns:
+        - observation (dict)
+        - reward (float)
+        - done (bool): True if game over
+        - truncated (bool): always False here (Gym API)
+        - info (dict): optional info
+        """
         done = False
         truncated = False
         reward = 0
 
-        # Validate action (must be on an empty cell)
+        # Validate action
         if self.valid_actions()[action] == 0:
-            print(f"Chosen action: {action}")
-            print(f"Valid actions: {self.valid_actions()}")
-            print(f"Gameboard:\n{self.gameboard}")
             raise ValueError("Invalid action: cell already occupied.")
 
-
-        # Check if this move could lead to a winning opportunity
+        # Check if action can lead to immediate win
         possible_win = is_winning_move(
             self.player, self.gameboard, self.board_length,
             self.pattern_victory_length, self.valid_actions()
         )
 
-        # Map action (integer) to 2D board coordinates (row, col)
+        # Map 1D action to 2D board coordinates
         line, column = divmod(action, self.board_length)
         self.gameboard[line][column] = self.player
 
-        # Check for victory by evaluating lines, columns, and diagonals
+        # Check for victory
         if (
                 win_on_ascending_diagonal(self.board_length, line, column, self.player, self.gameboard, self.pattern_victory_length) or
                 win_on_descending_diagonal(self.board_length, line, column, self.player, self.gameboard, self.pattern_victory_length) or
@@ -144,39 +160,36 @@ class TicTacToeBaseEnv(gym.Env):
         ):
             reward = self.victory_reward
             done = True
-
-        # Check if board is full (draw)
         elif board_is_full(self.gameboard):
             reward = 0
             done = True
-
         else:
-            # If no victory or draw yet:
-            # Reward with a penalty if possible winning move missed, else heuristic points
-            if possible_win:
-                reward = REWARD_MISSED_WIN
-            else:
-                reward = heuristic_points(
-                    str(self.player), str(1 - self.player),
-                    self.gameboard, self.board_length,
-                    self.pattern_victory_length, self.valid_actions()
-                )
+            reward = REWARD_MISSED_WIN if possible_win else heuristic_points(
+                str(self.player), str(1 - self.player),
+                self.gameboard, self.board_length,
+                self.pattern_victory_length, self.valid_actions()
+            )
 
-        # Switch to the other player
-        self.player = 1 - self.player
+        self.player = 1 - self.player  # Switch player
         return self.get_observation(), reward, done, truncated, {}
 
     # ---------- Rendering ----------
     def render_matplotlib(self, action=None, player1_type=None, player2_type=None):
         """
-        Renders the current board state as an image using Matplotlib.
-        Saves each frame to a folder for later GIF creation.
+        Render the board using Matplotlib.
+
+        Parameters:
+        - action (int): last action performed (optional, for highlight)
+        - player1_type (str): name/type of player 1
+        - player2_type (str): name/type of player 2
+
+        Returns:
+        - str: path of saved image
         """
+        # Folder setup for saving frames
         project_root = Path(__file__).resolve().parent.parent
         base_folder = project_root / "gameboard_images"
         base_folder.mkdir(exist_ok=True)
-
-        # Create a new folder with timestamp for saving frames if not already created
         if self.render_folder is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             folder_name = f"game_{self.board_length}_{self.pattern_victory_length}_{timestamp}"
@@ -184,7 +197,7 @@ class TicTacToeBaseEnv(gym.Env):
             self.render_folder.mkdir(exist_ok=True)
             self.frame_index = 0
 
-        # Filepath for current frame image
+        # Path for current frame
         filename = f"frame_{self.frame_index:03}.png"
         save_path = self.render_folder / filename
         self.frame_index += 1
@@ -192,46 +205,45 @@ class TicTacToeBaseEnv(gym.Env):
         left_name = self.format_name(player1_type)
         right_name = self.format_name(player2_type)
 
-        # Setup plot
+        # Draw board with patches and symbols
         fig, ax = plt.subplots(figsize=(5, 5))
         ax.set_facecolor('black')
         ax.set_xticks([])
         ax.set_yticks([])
         ax.set_xlim(0, self.board_length)
         ax.set_ylim(0, self.board_length)
-
-        # Display player names above the board
-        ax.text(0, self.board_length + 0.05, left_name,
-                ha="left", va="bottom", color="red", fontsize=14, fontweight="bold")
-        ax.text(self.board_length, self.board_length + 0.05, right_name,
-                ha="right", va="bottom", color="#0b9ed8", fontsize=14, fontweight="bold")
+        ax.text(0, self.board_length + 0.05, left_name, ha="left", va="bottom", color="red", fontsize=14, fontweight="bold")
+        ax.text(self.board_length, self.board_length + 0.05, right_name, ha="right", va="bottom", color="#0b9ed8", fontsize=14, fontweight="bold")
 
         neon_blue = "#0b9ed8"
         red = "red"
 
-        # Draw each cell with appropriate color and symbol
         for i in range(self.board_length):
             for j in range(self.board_length):
                 cell = self.gameboard[i][j]
                 x = j
-                y = self.board_length - i - 1  # Flip vertical axis for display
+                y = self.board_length - i - 1
                 rect = patches.Rectangle((x, y), 1, 1, edgecolor="white", facecolor="black", linewidth=1)
                 ax.add_patch(rect)
-
                 if cell in (0, 1):
                     symbol = "X" if cell == 0 else "O"
                     color = red if cell == 0 else neon_blue
-                    ax.text(x + 0.5, y + 0.5, symbol, ha="center", va="center",
-                            fontsize=24, color=color, fontweight="bold", zorder=2)
+                    ax.text(x + 0.5, y + 0.5, symbol, ha="center", va="center", fontsize=24, color=color, fontweight="bold", zorder=2)
 
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()
-
         return str(save_path)
 
     def render(self, action=None, player1_type=None, player2_type=None):
         """
-        Renders the game either in ANSI terminal or as a Matplotlib image.
+        Main render function.
+
+        Chooses the rendering mode ('ansi' or 'matplotlib').
+
+        Parameters:
+        - action (int): last action (optional)
+        - player1_type (str)
+        - player2_type (str)
         """
         if self.render_mode == "ansi":
             self._render_ansi(action)
@@ -242,8 +254,10 @@ class TicTacToeBaseEnv(gym.Env):
 
     def _render_ansi(self, action):
         """
-        Prints the board in the terminal with colors (ANSI escape codes).
-        Highlights the last action made.
+        Render the board in terminal using ANSI colors.
+
+        Parameters:
+        - action (int): last move to highlight
         """
         line, column = divmod(action, self.board_length)
         print("    ", end="")
@@ -252,7 +266,6 @@ class TicTacToeBaseEnv(gym.Env):
         print()
 
         print("    " + WHITE + FAINT + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
-
         for row_index, row in enumerate(self.gameboard):
             print(f" {row_index:02} ", end="")
             for col_index, pattern in enumerate(row):
@@ -263,7 +276,7 @@ class TicTacToeBaseEnv(gym.Env):
                 elif symbol == 1:
                     color = RED
                 if col_index == column and row_index == line:
-                    color += BOLD  # Highlight last move
+                    color += BOLD
                 if symbol != EMPTY_CELL:
                     print(WHITE + FAINT + "| " + RESET + color + f"{symbol} " + RESET, end="")
                 else:
@@ -277,7 +290,14 @@ class TicTacToeBaseEnv(gym.Env):
 
     def create_gif_from_folder(self, gif_name="game.gif", duration=500):
         """
-        Creates a GIF animation from the saved PNG frames in the render folder.
+        Create a GIF from saved PNG frames.
+
+        Parameters:
+        - gif_name (str): filename for the GIF
+        - duration (int): duration per frame in ms
+
+        Returns:
+        - str: path to saved GIF
         """
         images = []
         files = sorted([f for f in os.listdir(self.render_folder) if f.endswith(".png")])
@@ -289,13 +309,7 @@ class TicTacToeBaseEnv(gym.Env):
 
         if images:
             gif_path = os.path.join(self.render_folder, gif_name)
-            images[0].save(
-                gif_path,
-                save_all=True,
-                append_images=images[1:],
-                duration=duration,
-                loop=0
-            )
+            images[0].save(gif_path, save_all=True, append_images=images[1:], duration=duration, loop=0)
             print(f"✅ GIF saved at: {gif_path}")
             return gif_path
         else:
@@ -304,7 +318,13 @@ class TicTacToeBaseEnv(gym.Env):
 
     def format_name(self, agent_type):
         """
-        Returns a readable name string for the player type.
+        Return a readable name for a player.
+
+        Parameters:
+        - agent_type (str or None): type or filename of agent
+
+        Returns:
+        - str: formatted name
         """
         if agent_type is None:
             return "Unknown"

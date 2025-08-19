@@ -16,13 +16,13 @@ The goal is to train an agent capable of defeating random, smart-random, and pre
 5. [Training](#training)
 6. [Evaluation](#evaluation)
 7. [Visualization](#visualization)
-8. [Demo](#demo)
-9. [Packages / Environment](#packages--environment)
-10. [Contributing](#contributing)
-11. [License](#license)
-12. [Conclusion](#conclusion)
-13. [Contact](#contact)
-
+8. [Run the Game](#Run-the-game)
+9. [Demo](#demo)
+10. [Packages / Environment](#packages--environment)
+11. [Contributing](#contributing)
+12. [License](#license)
+13. [Conclusion](#conclusion)
+14. [Contact](#contact)
 
 ---
 
@@ -132,6 +132,37 @@ Tracks first player, second player, and overall defeat rates over 1000 evaluatio
 
 - **Against Smart Random**  
   ![Defeat Rate vs Smart Random](graphics/defeat_rate_graphic_smart_random_3x3.png)
+
+---
+
+## Run The Game
+
+You can play TicTacToe directly in the terminal using the `play/game.py` script.  
+The game supports human players as well as AI agents (`RandomAgent`, `SmartRandomAgent`, PPO agents).
+
+### Command-line arguments
+
+| Flag | Description |
+|------|-------------|
+| `-p` | Board size (e.g., `-p 3` → 3x3 board) |
+| `-w` | Victory pattern length (number of consecutive symbols needed to win) |
+| `-f` | First player type (`human`, `random`, `smart_random`, or `agent`) |
+| `-v` | Version of the PPO agent (used after `-f` or `-s`) |
+| `-s` | Second player type (`human`, `random`, `smart_random`, or `agent`) |
+
+### Examples
+
+1. **Human vs Random on a 3x3 board, 3 in a row to win:**
+
+```bash
+    python play/game.py -p 3 -w 3 -f human -s random
+```
+
+2. **PPO Agent v1 vs smart_random on a 3x3 board, 3 in a row to win:**
+
+```bash
+    python play/game.py -p 4 -w 3 -f agent -v 1 -s agent -v 2
+```
 
 ---
 

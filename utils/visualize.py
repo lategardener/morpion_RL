@@ -46,7 +46,7 @@ def defeat_rate_plot():
                 marker="o"
             )
             plt.title(f"Defeat Rates Evolution - {player_name}")
-            plt.xlabel("Checkpoint")
+            plt.xlabel("Checkpoint (each = 10,000 training steps)")
             plt.ylabel("Defeat Rate")
             plt.ylim(0, 1)
             plt.grid(True, alpha=0.3)

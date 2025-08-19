@@ -131,7 +131,7 @@ Tracks first player, second player, and overall defeat rates over 1000 evaluatio
   ![Defeat Rate vs Random](graphics/defeat_rate_graphic_random_3x3.png)
 
 - **Against Smart Random**  
-  ![Defeat Rate vs Smart Random](graphics/defeat_rate_graphic_smart_random_3x3.png)
+  ![Defeat Rate vs Smart Random](graphics/defeat_rate_graphic_smart_random_3x3_black.png)
 
 ---
 

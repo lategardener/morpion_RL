@@ -234,6 +234,8 @@ class TicTacToeBaseEnv(gym.Env):
         plt.close()
         return str(save_path)
 
+
+
     def render(self, action=None, player1_type=None, player2_type=None):
         """
         Main render function.
@@ -259,15 +261,15 @@ class TicTacToeBaseEnv(gym.Env):
         Parameters:
         - action (int): last move to highlight
         """
-        line, column = divmod(action, self.board_length)
-        print("    ", end="")
+        line, column = divmod(action, self.board_length) if action else -1, -1
+        print("     ", end="")
         for i in range(self.board_length):
             print(f" {i}  ", end="")
         print()
 
-        print("    " + WHITE + FAINT + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
+        print("    " + WHITE + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
         for row_index, row in enumerate(self.gameboard):
-            print(f" {row_index:02} ", end="")
+            print(f"  {row_index} ", end="")
             for col_index, pattern in enumerate(row):
                 symbol = int(pattern)
                 color = None
@@ -278,15 +280,17 @@ class TicTacToeBaseEnv(gym.Env):
                 if col_index == column and row_index == line:
                     color += BOLD
                 if symbol != EMPTY_CELL:
-                    print(WHITE + FAINT + "| " + RESET + color + f"{symbol} " + RESET, end="")
+                    print(WHITE + "| " + RESET + color + f"{symbol} " + RESET, end="")
                 else:
-                    print(WHITE + FAINT + "|   " + RESET, end="")
-            print(WHITE + FAINT + "|" + RESET)
+                    print(WHITE + "|   " + RESET, end="")
+            print(WHITE + "|" + RESET)
 
             if row_index < self.board_length - 1:
-                print("    " + WHITE + FAINT + "├———" + "•———" * (self.board_length - 1) + "┤" + RESET)
+                print("    " + WHITE + "├———" + "•———" * (self.board_length - 1) + "┤" + RESET)
             else:
-                print("    " + WHITE + FAINT + "└———" + "┴———" * (self.board_length - 1) + "┘" + RESET)
+                print("    " + WHITE + "└———" + "┴———" * (self.board_length - 1) + "┘" + RESET)
+
+
 
     def create_gif_from_folder(self, gif_name="game.gif", duration=500):
         """

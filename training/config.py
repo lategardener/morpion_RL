@@ -1,9 +1,7 @@
 import os
-
 import torch.nn as nn
 from utils.models_utils import exp_decay
 import torch as th
-import torch.nn as nn
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 # ==============================
@@ -11,8 +9,9 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 # ==============================
 TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH = 3
 TRAINING_DEFAULT_BOARD_LENGTH = 3
-TRAINING_DEFAULT_FIRST_PLAY_RATE = 0.5
-TRAINING_DEFAULT_REVIEW_RATIO = 0.0
+TRAINING_DEFAULT_FIRST_PLAY_RATE = 0.3
+TRAINING_DEFAULT_REVIEW_RATIO = 0.3
+
 
 # ==============================
 # Directories and paths
@@ -20,12 +19,10 @@ TRAINING_DEFAULT_REVIEW_RATIO = 0.0
 
 # Absolute path to this file (config.py)
 current_file_path = os.path.abspath(__file__)
-
 # Directory containing config.py
 current_dir = os.path.dirname(current_file_path)
-
 # Move up two levels to the root of the tic_tac_toe_rl project
-project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
 
 # Build path to models directory
 MODELS_DIR = os.path.join(
@@ -33,30 +30,13 @@ MODELS_DIR = os.path.join(
     'models',
     f'models_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}'
 )
-
-
-# Folder name for wandb model saving (if used)
-WANDB_MODEL_DIR = f"{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
-
 # Ensure models directory exists
 os.makedirs(MODELS_DIR, exist_ok=True)
 
 # Path to statistics file
-STATS_PATH = os.path.join(MODELS_DIR, "opponent_stats.json")
+BEST_STATS_PATH = os.path.join(MODELS_DIR, "opponent_stats.json")
+ALL_STATS_PATH = os.path.join(MODELS_DIR, "opponent_all_stats.json")
 DEFEAT_PATH = os.path.join(MODELS_DIR, "defeated_games.json")
-
-# ==============================
-# Hyperparameters
-# ==============================
-GAMMA = 0.95  # Discount factor
-GAE_LAMBDA = 0.95  # GAE lambda for advantage estimation
-START_ENT_COEF = 0.02  # Initial entropy coefficient
-CHECKPOINT_INTERVAL = 10000  # Number of steps between checkpoints
-IMPROVEMENT_THRESHOLD = 0.03  # Threshold to consider an improvement
-TOTAL_STEPS = 100000  # Total training steps
-
-# Learning rate schedule (exponential decay)
-LR_SCHEDULE = exp_decay(3e-4, 1e-5)
 
 
 # ==============================
@@ -64,12 +44,26 @@ LR_SCHEDULE = exp_decay(3e-4, 1e-5)
 # ==============================
 BASE_MODELS_NAME = f"model_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
 
+
+
+# ==============================
+# Hyperparameters
+# ==============================
+GAMMA = 0.99  # Discount factor
+GAE_LAMBDA = 0.95  # GAE lambda for advantage estimation
+START_ENT_COEF = 0.02  # Initial entropy coefficient
+CHECKPOINT_INTERVAL = 10000  # Number of steps between checkpoints
+IMPROVEMENT_THRESHOLD = 0.03  # Threshold to consider an improvement
+TOTAL_STEPS = 300000  # Total training steps
+
+# Learning rate schedule (exponential decay)
+LR_SCHEDULE = exp_decay(3e-4, 1e-5)
+
+
+
 # ==============================
 # Policy architecture
 # ==============================
-import torch as th
-import torch.nn as nn
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 class CustomCNN3x3(BaseFeaturesExtractor):
     """

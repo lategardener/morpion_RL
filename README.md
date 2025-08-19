@@ -161,7 +161,7 @@ The game supports human players as well as AI agents (`RandomAgent`, `SmartRando
 2. **PPO Agent v1 vs smart_random on a 3x3 board, 3 in a row to win:**
 
 ```bash
-    python play/game.py -p 4 -w 3 -f agent -v 1 -s agent -v 2
+    python play/game.py -p 4 -w 3 -f agent -v 1 -s smart_random
 ```
 
 ---

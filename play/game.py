@@ -60,14 +60,23 @@ def get_action(env, agent, board_length, pattern_victory_length):
     valid_moves = np.where(env.valid_actions() == 1)[0]
 
     if agent == "human":
+        # Convert valid moves to regular int list
+        valid_moves_list = [int(i) for i in valid_moves]
+
+        # Display mapping for the player
+        console.print(f"Available moves:\n{valid_moves}", style="bold cyan")
+
         while True:
             try:
-                move = int(input(f"🔢 Enter a valid cell {list(valid_moves)}: "))
-                if move in valid_moves:
+                move = int(input(f"Enter a valid cell index from the list above: "))
+                if move in valid_moves_list:
                     return move
-                console.print("❌ Invalid cell.", style="bold red")
+                console.print("❌ Invalid cell. Please choose from the available cells.", style="bold red")
             except ValueError:
-                console.print("❌ Invalid input.", style="bold red")
+                console.print("❌ Invalid input. Please enter a number.", style="bold red")
+            except KeyboardInterrupt:
+                pass
+            return sys.exit
 
     elif isinstance(agent, RandomAgent):
         return agent.play(valid_moves=valid_moves)
@@ -128,6 +137,12 @@ def play_game(player1, player2, board_length, pattern_victory_length, render_del
         )
 
         action = get_action(env, agent, board_length, pattern_victory_length)
+
+        # Handle user interrupt or invalid action
+        if not isinstance(action, int):
+            console.print(f"\nGame interrupted by user. Exiting the game...", style="bold red")
+            return
+
         obs, reward, done, _, _ = env.step(action)
 
         env.render(action=action)

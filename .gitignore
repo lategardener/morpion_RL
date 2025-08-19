@@ -10,10 +10,7 @@ TIC_TAC_TOE_BEST_MODELS/
 # IDE setup files
 .idea/
 
-best_models/
-
-models/models_9_5/
-models/models_9_5/wandb/
+models/
 
 # Ignorer tous les fichiers pycache
 __pycache__/
@@ -21,5 +18,4 @@ __pycache__/
 
 gameboard_images/
 
-models/
 defeat_games/

@@ -1,7 +1,7 @@
 import json
 from collections import deque
 from envs import TicTacToeTrainingEnv
-from test.action_mask_ import mask_fn
+from utils.action_mask_ import mask_fn
 from training.config import *
 
 

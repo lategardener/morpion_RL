@@ -128,7 +128,7 @@ For example, with 0 defeats over 1,000 games:
 Tracks first player, second player, and overall defeat rates over 1000 evaluation episodes.
 
 - **Against Random**  
-  ![Defeat Rate vs Random](graphics/defeat_rate_graphic_random_3x3.png)
+  ![Defeat Rate vs Random](graphics/defeat_rate_graphic_random_3x3_black.png)
 
 - **Against Smart Random**  
   ![Defeat Rate vs Smart Random](graphics/defeat_rate_graphic_smart_random_3x3_black.png)

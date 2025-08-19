@@ -31,7 +31,7 @@ The goal is to train an agent capable of defeating random, smart-random, and pre
 The Tic-Tac-Toe RL project aims to train an agent to play optimally against multiple opponent types:
 
 - **Random agent**
-- **Smart random agent**
+- **Smart random agent** – an evolved random agent that **wins immediately when possible, blocks the opponent if they are about to win, otherwise plays randomly**.
 - Previously trained PPO agents
 
 The agent learns using **MaskablePPO** with dynamic training parameters and tracks detailed statistics including defeat rates as first or second player.
@@ -194,7 +194,8 @@ This project implemented a **Reinforcement Learning agent** for Tic-Tac-Toe usin
 
 Key points:
 
-- **Heuristics to speed up learning** were implemented, inspired by [this study](references/heuristic_parameters_n_aligned.pdf). You can see the implementation in [utils/heuristics.py](utils/heuristics.py).
+- **Heuristics to speed up learning** were implemented, inspired by the Master’s thesis of Abdel-Hafiz Abdoulaye ([Determining Parameters of a Generic Heuristic for N-Aligned Games via Machine Learning, IFRI-UAC, 2016-2017](docs/heuristic_parameters.pdf)). You can see the implementation in [training/heuristics.py](training/heuristics.py).
+
 - The **neural network architecture** was customized. For the 3x3 board, a simple **MLP** is used. You can find the model definition in [training/config.py](training/config.py), and other architectures can be implemented for different board sizes.
 
 

@@ -38,7 +38,7 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=1000):
             first_play_rate=0.0,
             lost_games_path=DEFEAT_PATH,
             review_ratio=0.0,
-            opponent_statistics_file=STATS_PATH,
+            opponent_statistics_file=BEST_STATS_PATH,
         )
 
         env_second = TicTacToeTrainingEnv(
@@ -49,7 +49,7 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=1000):
             first_play_rate=1.0,
             lost_games_path=DEFEAT_PATH,
             review_ratio=0.0,
-            opponent_statistics_file=STATS_PATH,
+            opponent_statistics_file=BEST_STATS_PATH,
         )
 
         # Initialize counters

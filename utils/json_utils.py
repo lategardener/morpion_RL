@@ -24,7 +24,7 @@ def convert_to_serializable(obj):
         return [convert_to_serializable(item) for item in obj]
     return obj
 
-def load_opponent_stats(opponents, stats_path=STATS_PATH):
+def load_opponent_stats(opponents, stats_path=BEST_STATS_PATH):
     """
     Load opponent statistics from a JSON file.
 

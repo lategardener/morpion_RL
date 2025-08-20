@@ -1,16 +1,10 @@
 # Environnement virtuel
 venv/
 
-# wandb files
-wandb/
-
-# Trained agents_9_5
-TIC_TAC_TOE_BEST_MODELS/
-
 # IDE setup files
 .idea/
 
-agents/
+trained_agents/
 
 # Ignorer tous les fichiers pycache
 __pycache__/
@@ -18,4 +12,3 @@ __pycache__/
 
 gameboard_images/
 
-defeat_games/

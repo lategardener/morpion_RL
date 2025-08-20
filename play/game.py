@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+
 import numpy as np
 from time import sleep
 
@@ -18,7 +19,7 @@ from configs.config import *
 console = Console()
 
 
-def load_agent(agent_type, version=None, board_length=None):
+def load_agent(agent_type, version=None, board_length=None, victory_pattern_length=None):
     """
     Load the appropriate agent:
     - "random", "smart_random", "human"
@@ -37,7 +38,13 @@ def load_agent(agent_type, version=None, board_length=None):
             )
             sys.exit(1)
 
-        model_path = f"best_models/model_v{version}_{board_length}x{board_length}.zip"
+        if victory_pattern_length is None:
+            console.print(
+                Panel.fit("❌ Victory pattern length.", style="bold red")
+            )
+            sys.exit(1)
+
+        model_path = f"best_models/model_v{version}_{board_length}x{board_length}_{victory_pattern_length}.zip"
         if not os.path.exists(model_path):
             console.print(
                 Panel.fit(
@@ -55,7 +62,7 @@ def load_agent(agent_type, version=None, board_length=None):
         sys.exit(1)
 
 
-def get_action(env, agent, board_length, pattern_victory_length):
+def get_action(env, agent, board_length, victory_patteen_length):
     """Choose the action based on agent type."""
     valid_moves = np.where(env.valid_actions() == 1)[0]
 
@@ -64,7 +71,7 @@ def get_action(env, agent, board_length, pattern_victory_length):
         valid_moves_list = [int(i) for i in valid_moves]
 
         # Display mapping for the player
-        console.print(f"Available moves:\n{valid_moves}", style="bold cyan")
+        console.print(f"Available moves: {valid_moves}", style="bold cyan")
 
         while True:
             try:
@@ -87,7 +94,7 @@ def get_action(env, agent, board_length, pattern_victory_length):
             gameboard=env.gameboard,
             valid_moves=valid_moves,
             board_length=board_length,
-            pattern_victory_length=pattern_victory_length,
+            pattern_victory_length=victory_patteen_length,
         )
 
     elif isinstance(agent, PPOAgent):
@@ -100,11 +107,11 @@ def get_action(env, agent, board_length, pattern_victory_length):
 
 
 
-def play_game(player1, player2, board_length, pattern_victory_length, render_delay=2):
+def play_game(player1, player2, board_length, victory_pattern_length, render_delay=2):
     """Main loop to play a TicTacToe game."""
     env = TicTacToeBaseEnv(
         board_length=board_length,
-        pattern_victory_length=pattern_victory_length,
+        pattern_victory_length=victory_pattern_length,
         render_mode="ansi",  # replace with render_rich if implemented
     )
     obs, _ = env.reset()
@@ -118,7 +125,7 @@ def play_game(player1, player2, board_length, pattern_victory_length, render_del
     # Initial display
     console.print(
         Panel(
-            f"Game start!\nBoard: {board_length}x{board_length}\nVictory condition: {pattern_victory_length} in a row\nPlayers:\nPlayer 1 : {player_types[0]}\nPlayer 2 : {player_types[1]}",
+            f"Game start!\nBoard: {board_length}x{board_length}\nVictory condition: {victory_pattern_length} in a row\nPlayers:\nPlayer 1 : {player_types[0]}\nPlayer 2 : {player_types[1]}",
             title="🎮 TicTacToe",
             style="bold cyan",
             expand=False,
@@ -136,7 +143,8 @@ def play_game(player1, player2, board_length, pattern_victory_length, render_del
             )
         )
 
-        action = get_action(env, agent, board_length, pattern_victory_length)
+        action = int(get_action(env, agent, board_length, victory_pattern_length))
+
 
         # Handle user interrupt or invalid action
         if not isinstance(action, int):
@@ -202,7 +210,7 @@ if __name__ == "__main__":
     win_length = args.win
 
     # Load players
-    p1 = load_agent(args.first, args.version_first, board_length)
-    p2 = load_agent(args.second, args.version_second, board_length)
+    p1 = load_agent(args.first, args.version_first, board_length, win_length)
+    p2 = load_agent(args.second, args.version_second, board_length, win_length)
 
     play_game(p1, p2, board_length, win_length)

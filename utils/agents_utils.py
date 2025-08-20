@@ -71,9 +71,8 @@ def get_last_agent_number(agents_dir):
     max_num = 0
 
     for f in agent_files:
-        parts = f[:-4].split("_")
         try:
-            num = int(parts[-1])
+            num = int(f[7])
             if num > max_num:
                 max_num = num
         except ValueError:

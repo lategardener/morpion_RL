@@ -25,24 +25,24 @@ current_dir = os.path.dirname(current_file_path)
 project_root = os.path.abspath(os.path.join(current_dir, '..'))
 
 # Build path to agents directory
-MODELS_DIR = os.path.join(
+AGENTS_DIR = os.path.join(
     project_root,
-    'agents',
-    f'agents_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}'
+    'trained_agents',
+    f'agents_{TRAINING_DEFAULT_BOARD_LENGTH}x{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}'
 )
 # Ensure agents directory exists
-os.makedirs(MODELS_DIR, exist_ok=True)
+os.makedirs(AGENTS_DIR, exist_ok=True)
 
 # Path to statistics file
-BEST_STATS_PATH = os.path.join(MODELS_DIR, "opponent_stats.json")
-ALL_STATS_PATH = os.path.join(MODELS_DIR, "opponent_all_stats.json")
-DEFEAT_PATH = os.path.join(MODELS_DIR, "defeated_games.json")
+BEST_STATS_PATH = os.path.join(AGENTS_DIR, "opponent_stats.json")
+ALL_STATS_PATH = os.path.join(AGENTS_DIR, "opponent_all_stats.json")
+DEFEAT_PATH = os.path.join(AGENTS_DIR, "defeated_games.json")
 
 
 # ==============================
 # Base agent naming
 # ==============================
-BASE_MODELS_NAME = f"agent_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
+BASE_AGENTS_NAME = f"{TRAINING_DEFAULT_BOARD_LENGTH}x{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
 
 
 
@@ -54,7 +54,7 @@ GAE_LAMBDA = 0.95  # GAE lambda for advantage estimation
 START_ENT_COEF = 0.02  # Initial entropy coefficient
 CHECKPOINT_INTERVAL = 10000  # Number of steps between checkpoints
 IMPROVEMENT_THRESHOLD = 0.03  # Threshold to consider an improvement
-TOTAL_STEPS = 300000  # Total training steps
+TOTAL_STEPS = 100000  # Total training steps
 
 # Learning rate schedule (exponential decay)
 LR_SCHEDULE = exp_decay(3e-4, 1e-5)

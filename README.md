@@ -74,16 +74,18 @@ The agent is trained in a custom Gymnasium-based environment:
 ```
 tic-tac-toe-ppo/
 ├── agents
+├── best_models
 ├── configs
-├── defeat_games
 ├── demo
 ├── envs
-├── gameboard_images
-├── model
-├── test
+├── graphics
+├── LICENSE
+├── play
+├── README.md
+├── references
+├── requirements.txt
 ├── training
-├── utils
-└── README.md
+└── utils
 ```
 ---
 
@@ -150,7 +152,7 @@ The game supports human players as well as AI agents (`RandomAgent`, `SmartRando
 | `-v` | Version of the PPO agent (used after `-f` or `-s`) |
 | `-s` | Second player type (`human`, `random`, `smart_random`, or `agent`) |
 
-### Examples
+#### Examples
 
 1. **Human vs Random on a 3x3 board, 3 in a row to win:**
 
@@ -164,9 +166,24 @@ The game supports human players as well as AI agents (`RandomAgent`, `SmartRando
     python play/game.py -p 3 -w 3 -f agent -v 1 -s smart_random
 ```
 
+### ⚠️ Important: PPO Agents
+
+To play with PPO agents, you must first **train them** and then move the trained models into the `best_models/` folder.  
+The models must follow a strict naming convention:
+- **`version`** → identifier of the model (integer). It allows you to differentiate multiple agents trained on the **same board size** and **victory pattern**.
+- **`board_length`** → board size (square), must match the size the agent was trained on.
+- **`victory_pattern_length`** → number of consecutive symbols required to win, must also match the training configuration.
+
+<br>
+
+#### Example:  
+Two models trained on a **5x5 board** with **4 in a row to win** can be saved as:
+- **`model_v1_5x5_4.zip`**
+- **`model_v2_5x5_4.zip`**
+
 ---
 
-<br><br>
+
 ## Demo
 
 <br>

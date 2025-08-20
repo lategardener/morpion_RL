@@ -49,7 +49,7 @@ BASE_AGENTS_NAME = f"{TRAINING_DEFAULT_BOARD_LENGTH}x{TRAINING_DEFAULT_PATTERN_V
 # ==============================
 # Hyperparameters
 # ==============================
-GAMMA = 0.99  # Discount factor
+GAMMA = 0.95  # Discount factor
 GAE_LAMBDA = 0.95  # GAE lambda for advantage estimation
 START_ENT_COEF = 0.02  # Initial entropy coefficient
 CHECKPOINT_INTERVAL = 10000  # Number of steps between checkpoints

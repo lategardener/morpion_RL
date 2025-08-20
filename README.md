@@ -75,7 +75,6 @@ The agent is trained in a custom Gymnasium-based environment:
 ├── agents
 ├── best_agents
 ├── configs
-├── defeat_games
 ├── demo
 ├── envs
 ├── graphics

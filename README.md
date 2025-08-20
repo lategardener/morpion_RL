@@ -72,10 +72,10 @@ The agent is trained in a custom Gymnasium-based environment:
 ## Project Structure
 
 ```
-tic-tac-toe-ppo/
 ├── agents
 ├── best_agents
 ├── configs
+├── defeat_games
 ├── demo
 ├── envs
 ├── graphics
@@ -84,6 +84,7 @@ tic-tac-toe-ppo/
 ├── README.md
 ├── references
 ├── requirements.txt
+├── trained_agents
 ├── training
 └── utils
 ```
@@ -174,12 +175,21 @@ The agents must follow a strict naming convention:
 - **`board_length`** → board size (square), must match the size the agent was trained on.
 - **`victory_pattern_length`** → number of consecutive symbols required to win, must also match the training configuration.
 
-<br>
 
-#### Example:  
-Two agents trained on a **5x5 board** with **4 in a row to win** can be saved as:
-- **`agent_v1_5x5_4.zip`**
-- **`agent_v2_5x5_4.zip`**
+### Useful options
+
+- **`-h`** → display help with a description of all parameters and an example of how to launch the game.
+- **`-m`** → list all available agents in the `best_agents/` folder in a table format.
+
+#### Example:
+
+```bash
+  # Show help
+  python play/game.py -h
+
+  # List available trained agents
+  python play/game.py -m
+```
 
 ---
 

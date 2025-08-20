@@ -37,7 +37,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         - pattern_victory_length (int): number of consecutive marks to win
         - render_mode (str): "ansi" or "matplotlib" rendering
         - victory_reward (float): reward for winning the game
-        - opponent_pool (list[str]): list of opponent types or model paths
+        - opponent_pool (list[str]): list of opponent types or agent paths
         - evaluation (bool): if True, logs agent and opponent moves
         - first_play_rate (float): probability that the agent plays first
         - lost_games_path (str): JSON file path containing past lost games
@@ -48,8 +48,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
 
         # Opponent configuration
         self.opponent_pool = opponent_pool if opponent_pool else ["random"]
-        self.opponent_models = self.preload_opponents(self.opponent_pool)  # Preload opponent instances
-        self.opponent_model = None  # Current opponent for the episode
+        self.opponent_agents = self.preload_opponents(self.opponent_pool)  # Preload opponent instances
+        self.opponent_agent = None  # Current opponent for the episode
         self.opponent_blows = []    # Track opponent moves for evaluation
         self.opponent_load_blows = None  # Moves loaded from past losing games
         self.agent_blows = []       # Track agent moves for evaluation
@@ -86,17 +86,17 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         Returns a normalized dictionary of probabilities.
         """
         probs = {}
-        n = len(self.opponent_models)
+        n = len(self.opponent_agents)
 
         # Equal portion (80%)
         equal_share = 0.8 / n
 
         # Total defeat rate for proportional portion (20%)
         total_defeat = sum(self.opponent_statistics.get(opponent, {"defeat_rate": 1.0})["defeat_rate"]
-                           for opponent in self.opponent_models)
+                           for opponent in self.opponent_agents)
 
         # Compute total probabilities
-        for opponent in self.opponent_models:
+        for opponent in self.opponent_agents:
             defeat_rate = self.opponent_statistics.get(opponent, {"defeat_rate": 1.0})["defeat_rate"]
             proportional_share = 0.2 * (defeat_rate / total_defeat) if total_defeat > 0 else 0
             probs[opponent] = equal_share + proportional_share
@@ -121,18 +121,18 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         """
         Preload opponent agents to avoid repeated disk access.
         - RandomAgent and SmartRandomAgent are instantiated directly
-        - PPOAgent loaded from .zip model file
+        - PPOAgent loaded from .zip agent file
         Returns a dict of opponent instances.
         """
-        models = {}
+        agents = {}
         for opponent in opponent_pool:
             if opponent == "random":
-                models["random"] = RandomAgent()
+                agents["random"] = RandomAgent()
             elif opponent == "smart_random":
-                models["smart_random"] = SmartRandomAgent()
+                agents["smart_random"] = SmartRandomAgent()
             elif opponent.endswith(".zip") and os.path.exists(opponent):
-                models[opponent] = PPOAgent(model_path=opponent, evaluation=True)
-        return models
+                agents[opponent] = PPOAgent(agent_path=opponent, evaluation=True)
+        return agents
 
     # ---------------------------
     # Environment control
@@ -149,7 +149,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
 
         # Choose opponent
         chosen_opponent = self.choose_opponent()
-        self.opponent_model = self.opponent_models[chosen_opponent]
+        self.opponent_agent = self.opponent_agents[chosen_opponent]
         self.opponent_statistics = self.load_opponent_statistics(self.opponent_statistics_file)
         self.opponent_probabilities = self.calculate_opponent_probabilities()
 
@@ -214,16 +214,16 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         Return opponent's move based on its type:
         - PPOAgent uses its play() method with observation
         - RandomAgent or SmartRandomAgent uses board info and valid moves
-        Raises ValueError if opponent model invalid.
+        Raises ValueError if opponent agent invalid.
         """
         valid_moves = np.where(self.valid_actions() == 1)[0]
 
-        if hasattr(self.opponent_model, "play"):
-            if hasattr(self.opponent_model, "model"):  # PPOAgent
+        if hasattr(self.opponent_agent, "play"):
+            if hasattr(self.opponent_agent, "agent"):  # PPOAgent
                 obs = self.get_observation()
-                return self.opponent_model.play(obs)
+                return self.opponent_agent.play(obs)
             else:  # Random or SmartRandom
-                return self.opponent_model.play(
+                return self.opponent_agent.play(
                     board_length=TRAINING_DEFAULT_BOARD_LENGTH,
                     pattern_victory_length=TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH,
                     player=self.player,
@@ -231,7 +231,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
                     valid_moves=valid_moves
                 )
 
-        raise ValueError("❌ Invalid opponent model!")
+        raise ValueError("❌ Invalid opponent agent!")
 
     def step(self, action):
         """

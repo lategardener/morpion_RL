@@ -1,12 +1,14 @@
 import argparse
 import os
 import sys
+import re
 
 import numpy as np
 from time import sleep
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -40,21 +42,21 @@ def load_agent(agent_type, version=None, board_length=None, victory_pattern_leng
 
         if victory_pattern_length is None:
             console.print(
-                Panel.fit("❌ Victory pattern length.", style="bold red")
+                Panel.fit("❌ Missing victory pattern length.", style="bold red")
             )
             sys.exit(1)
 
-        model_path = f"best_models/model_v{version}_{board_length}x{board_length}_{victory_pattern_length}.zip"
-        if not os.path.exists(model_path):
+        agent_path = f"best_agents/agent_v{version}_{board_length}x{board_length}_{victory_pattern_length}.zip"
+        if not os.path.exists(agent_path):
             console.print(
                 Panel.fit(
-                    f"❌ Model not found: [yellow]{model_path}[/yellow]",
-                    title="Model Error",
+                    f"❌ agent not found: [yellow]{agent_path}[/yellow]",
+                    title="agent Error",
                     style="bold red",
                 )
             )
             sys.exit(1)
-        return PPOAgent(model_path)
+        return PPOAgent(agent_path)
     else:
         console.print(
             Panel.fit(f"❌ Unknown agent type: {agent_type}", style="bold red")
@@ -67,10 +69,7 @@ def get_action(env, agent, board_length, victory_patteen_length):
     valid_moves = np.where(env.valid_actions() == 1)[0]
 
     if agent == "human":
-        # Convert valid moves to regular int list
         valid_moves_list = [int(i) for i in valid_moves]
-
-        # Display mapping for the player
         console.print(f"Available moves: {valid_moves}", style="bold cyan")
 
         while True:
@@ -106,13 +105,12 @@ def get_action(env, agent, board_length, victory_patteen_length):
         sys.exit(1)
 
 
-
 def play_game(player1, player2, board_length, victory_pattern_length, render_delay=2):
     """Main loop to play a TicTacToe game."""
     env = TicTacToeBaseEnv(
         board_length=board_length,
         pattern_victory_length=victory_pattern_length,
-        render_mode="ansi",  # replace with render_rich if implemented
+        render_mode="ansi",
     )
     obs, _ = env.reset()
     done = False
@@ -122,7 +120,6 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
         1: "Human" if player2 == "human" else type(player2).__name__
     }
 
-    # Initial display
     console.print(
         Panel(
             f"Game start!\nBoard: {board_length}x{board_length}\nVictory condition: {victory_pattern_length} in a row\nPlayers:\nPlayer 1 : {player_types[0]}\nPlayer 2 : {player_types[1]}",
@@ -145,8 +142,6 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
 
         action = int(get_action(env, agent, board_length, victory_pattern_length))
 
-
-        # Handle user interrupt or invalid action
         if not isinstance(action, int):
             console.print(f"\nGame interrupted by user. Exiting the game...", style="bold red")
             return
@@ -156,55 +151,84 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
         env.render(action=action)
         sleep(render_delay)
 
-    # Display result
     if reward > 0:
         winner_type = player_types[1 - env.player]
-        console.print(
-            Panel(
-                f"{winner_type} wins the game!",
-                style="bold green",
-                expand=False
-            )
-        )
+        console.print(Panel(f"{winner_type} wins the game!", style="bold green", expand=False))
     elif reward < 0:
         winner_type = player_types[env.player]
-        console.print(
-            Panel(
-                f"{winner_type} wins the game!",
-                style="bold green",
-                expand=False
-            )
-        )
+        console.print(Panel(f"{winner_type} wins the game!", style="bold green", expand=False))
     else:
-        console.print(
-            Panel(
-                "It's a draw!",
-                style="bold yellow",
-                expand=False
-            )
-        )
+        console.print(Panel("It's a draw!", style="bold yellow", expand=False))
+
+
+def list_agents():
+    """Display available agents in best_agents/ as a table."""
+    agents_dir = "best_agents"
+    if not os.path.exists(agents_dir):
+        console.print(f"[red]⚠️ Directory '{agents_dir}' not found.[/red]")
+        return
+
+    agents = [f for f in os.listdir(agents_dir) if f.endswith(".zip")]
+    if not agents:
+        console.print("[yellow]No agents found in 'best_agents'.[/yellow]")
+        return
+
+    table = Table(title="Available PPO agents", show_lines=True)
+    table.add_column("agent", style="cyan", no_wrap=True)
+    table.add_column("Description", style="green")
+    table.add_column("Version", style="magenta")
+
+    pattern = r"agent_v(\d+)_(\d+)x\2_(\d+)\.zip"
+
+    for agent in sorted(agents):
+        match = re.match(pattern, agent)
+        if match:
+            version, board, victory = match.groups()
+            description = f"Trained on {board}x{board} board with victory pattern of {victory}"
+            table.add_row(agent, description, f"v{version}")
+        else:
+            table.add_row(agent, "[red]Invalid naming convention[/red]", "-")
+
+    console.print(table)
+
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="TicTacToe Game Runner")
+    parser = argparse.ArgumentParser(
+        description="TicTacToe Game Runner",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="""Example:
+  python play/game.py -p 3 -w 3 -f human -s random
+  python play/game.py -p 3 -w 3 -f agent -vf 1 -s smart_random"""
+    )
 
-    parser.add_argument("-p", "--plateau", type=int, required=True, help="Board size (n x n)")
-    parser.add_argument("-w", "--win", type=int, required=True, help="Victory pattern length")
+    parser.add_argument("-p", "--plateau", type=int, help="Board size (n x n)")
+    parser.add_argument("-w", "--win", type=int, help="Victory pattern length")
 
-    parser.add_argument("-f", "--first", type=str, required=True,
+    parser.add_argument("-f", "--first", type=str,
                         choices=["agent", "random", "smart_random", "human"],
                         help="First player type")
-    parser.add_argument("-s", "--second", type=str, required=True,
+    parser.add_argument("-s", "--second", type=str,
                         choices=["agent", "random", "smart_random", "human"],
                         help="Second player type")
 
     parser.add_argument("-vf", "--version_first", type=int, help="Version for first player if agent")
     parser.add_argument("-vs", "--version_second", type=int, help="Version for second player if agent")
 
+    parser.add_argument("-m", "--agents", action="store_true", help="List available PPO agents")
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
+
+    if args.agents:
+        list_agents()
+        sys.exit(0)
+
+    if not all([args.plateau, args.win, args.first, args.second]):
+        console.print("[yellow]⚠️ Missing arguments. Use -h for help.[/yellow]")
+        sys.exit(1)
 
     board_length = args.plateau
     win_length = args.win

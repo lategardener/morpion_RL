@@ -1,15 +1,15 @@
 from sb3_contrib import MaskablePPO
 
 class PPOAgent:
-    def __init__(self, model_path, evaluation=False):
+    def __init__(self, agent_path, evaluation=False):
         """
         Initialize the PPO agent.
 
-        :param model_path: Path to the trained PPO model file (.zip).
+        :param agent_path: Path to the trained PPO agent file (.zip).
         :param evaluation: If True, the agent will act deterministically (for evaluation only).
                            If False, the agent will use stochastic actions (for training or exploration).
         """
-        self.model = MaskablePPO.load(model_path)
+        self.agent = MaskablePPO.load(agent_path)
         self.evaluation = evaluation
 
     def play(self, observation):
@@ -24,7 +24,7 @@ class PPOAgent:
         action_mask = observation["action_mask"]
 
         # Predict action based on the current observation and valid actions
-        action, _ = self.model.predict(
+        action, _ = self.agent.predict(
             observation,
             deterministic=self.evaluation,  # Deterministic if evaluation mode is on
             action_masks=action_mask         # Restrict predictions to valid actions

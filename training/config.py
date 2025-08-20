@@ -1,6 +1,6 @@
 import os
 import torch.nn as nn
-from utils.models_utils import exp_decay
+from utils.agents_utils import exp_decay
 import torch as th
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
@@ -24,13 +24,13 @@ current_dir = os.path.dirname(current_file_path)
 # Move up two levels to the root of the tic_tac_toe_rl project
 project_root = os.path.abspath(os.path.join(current_dir, '..'))
 
-# Build path to models directory
+# Build path to agents directory
 MODELS_DIR = os.path.join(
     project_root,
-    'models',
-    f'models_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}'
+    'agents',
+    f'agents_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}'
 )
-# Ensure models directory exists
+# Ensure agents directory exists
 os.makedirs(MODELS_DIR, exist_ok=True)
 
 # Path to statistics file
@@ -40,9 +40,9 @@ DEFEAT_PATH = os.path.join(MODELS_DIR, "defeated_games.json")
 
 
 # ==============================
-# Base model naming
+# Base agent naming
 # ==============================
-BASE_MODELS_NAME = f"model_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
+BASE_MODELS_NAME = f"agent_{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
 
 
 

@@ -5,16 +5,16 @@ from utils.action_mask_ import mask_fn
 from training.config import *
 
 
-def evaluate_model_by_opponent(model, opponent_pool, n_episodes=1000):
+def evaluate_agent_by_opponent(agent, opponent_pool, n_episodes=1000):
     """
-    Evaluate a given model against a pool of opponents.
+    Evaluate a given agent against a pool of opponents.
 
     Lost games are stored in a JSON file, keeping a maximum of 20 games.
     Each run deletes previous defeats and only stores the new ones.
 
     Args:
-        model: The RL model to evaluate.
-        opponent_pool: List of opponents (strings or PPO model paths).
+        agent: The RL agent to evaluate.
+        opponent_pool: List of opponents (strings or PPO agent paths).
         n_episodes: Number of episodes per opponent (default: 1000).
 
     Returns:
@@ -69,7 +69,7 @@ def evaluate_model_by_opponent(model, opponent_pool, n_episodes=1000):
 
             # Play one episode
             while not done:
-                action, _ = model.predict(obs, deterministic=True, action_masks=mask_fn(env))
+                action, _ = agent.predict(obs, deterministic=True, action_masks=mask_fn(env))
                 obs, reward, done, _, _ = env.step(action)
 
             # Record a lost game

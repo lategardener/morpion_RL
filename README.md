@@ -3,7 +3,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 This project focuses on training a Tic-Tac-Toe agent using **Proximal Policy Optimization (PPO)** with action masking.  
-The goal is to train an agent capable of defeating random, smart-random, and previous PPO models while tracking detailed performance statistics.
+The goal is to train an agent capable of defeating random, smart-random, and previous PPO agents while tracking detailed performance statistics.
 
 ---
 
@@ -74,7 +74,7 @@ The agent is trained in a custom Gymnasium-based environment:
 ```
 tic-tac-toe-ppo/
 ├── agents
-├── best_models
+├── best_agents
 ├── configs
 ├── demo
 ├── envs
@@ -168,18 +168,18 @@ The game supports human players as well as AI agents (`RandomAgent`, `SmartRando
 
 ### ⚠️ Important: PPO Agents
 
-To play with PPO agents, you must first **train them** and then move the trained models into the `best_models/` folder.  
-The models must follow a strict naming convention:
-- **`version`** → identifier of the model (integer). It allows you to differentiate multiple agents trained on the **same board size** and **victory pattern**.
+To play with PPO agents, you must first **train them** and then move the trained agents into the `best_agents/` folder.  
+The agents must follow a strict naming convention:
+- **`version`** → identifier of the agent (integer). It allows you to differentiate multiple agents trained on the **same board size** and **victory pattern**.
 - **`board_length`** → board size (square), must match the size the agent was trained on.
 - **`victory_pattern_length`** → number of consecutive symbols required to win, must also match the training configuration.
 
 <br>
 
 #### Example:  
-Two models trained on a **5x5 board** with **4 in a row to win** can be saved as:
-- **`model_v1_5x5_4.zip`**
-- **`model_v2_5x5_4.zip`**
+Two agents trained on a **5x5 board** with **4 in a row to win** can be saved as:
+- **`agent_v1_5x5_4.zip`**
+- **`agent_v2_5x5_4.zip`**
 
 ---
 
@@ -240,7 +240,7 @@ Key points:
 
 - **Heuristics to speed up learning** were implemented, inspired by the Master’s thesis of Abdel-Hafiz Abdoulaye ([Determining Parameters of a Generic Heuristic for N-Aligned Games via Machine Learning, IFRI-UAC, 2016-2017](docs/heuristic_parameters.pdf)). You can see the implementation in [training/heuristics.py](training/heuristics.py).
 
-- The **neural network architecture** was customized. For the 3x3 board, a simple **MLP** is used. You can find the model definition in [training/config.py](training/config.py), and other architectures can be implemented for different board sizes.
+- The **neural network architecture** was customized. For the 3x3 board, a simple **MLP** is used. You can find the agent definition in [training/config.py](training/config.py), and other architectures can be implemented for different board sizes.
 
 
 This demonstrates that combining **Reinforcement Learning with heuristics** can produce a strong agent for structured games like Tic-Tac-Toe.

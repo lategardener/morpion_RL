@@ -1,22 +1,22 @@
 from typing import Callable
 import os
 
-def get_models(path):
+def get_agents(path):
     """
-    Return the list of model file paths sorted by their model number.
+    Return the list of agent file paths sorted by their agent number.
 
-    Handles filenames with multiple underscores. Assumes model files
-    start with 'model_' and end with '.zip'.
+    Handles filenames with multiple underscores. Assumes agent files
+    start with 'agent_' and end with '.zip'.
     """
-    model_files = [
+    agent_files = [
         os.path.join(path, f)
         for f in os.listdir(path)
-        if f.startswith("model_") and f.endswith(".zip")
+        if f.startswith("agent_") and f.endswith(".zip")
     ]
 
     def extract_number(file_path):
         """
-        Extract the model number from a filename.
+        Extract the agent number from a filename.
 
         - Takes the last underscore-separated segment before '.zip'.
         - Returns -1 if extraction fails.
@@ -27,12 +27,12 @@ def get_models(path):
         except:
             return -1
 
-    return sorted(model_files, key=extract_number)
+    return sorted(agent_files, key=extract_number)
 
 
-def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_increase=0.01):
+def should_save_agent(current_stats, best_stats, threshold=0.03, max_defeat_increase=0.01):
     """
-    Decide whether to save the current model based on defeat rate comparisons.
+    Decide whether to save the current agent based on defeat rate comparisons.
 
     Rules:
     - Reject saving if any opponent's defeat_rate increases more than max_defeat_increase.
@@ -59,18 +59,18 @@ def should_save_model(current_stats, best_stats, threshold=0.03, max_defeat_incr
     return improvements > regressions
 
 
-def get_last_model_number(models_dir):
+def get_last_agent_number(agents_dir):
     """
-    Returns the highest model number in a directory of model files.
+    Returns the highest agent number in a directory of agent files.
 
-    Assumes model filenames are of the form 'model_X_Y_..._N.zip', where N is the number.
-    Returns 0 if no model files exist.
+    Assumes agent filenames are of the form 'agent_X_Y_..._N.zip', where N is the number.
+    Returns 0 if no agent files exist.
     """
-    model_files = [f for f in os.listdir(models_dir) if f.endswith(".zip")]
+    agent_files = [f for f in os.listdir(agents_dir) if f.endswith(".zip")]
 
     max_num = 0
 
-    for f in model_files:
+    for f in agent_files:
         parts = f[:-4].split("_")
         try:
             num = int(parts[-1])

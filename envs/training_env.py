@@ -259,7 +259,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             self.agent_blows.append(action)
 
         if done_agent or truncated_agent:
-            return obs_agent, reward_agent, done_agent, truncated_agent, info_agent
+            return obs_agent, self.victory_reward, done_agent, truncated_agent, info_agent
 
         # Reward for blocking imminent opponent win
         if opponent_win_before_moving is not None:

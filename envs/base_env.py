@@ -173,6 +173,8 @@ class TicTacToeBaseEnv(gym.Env):
         self.player = 1 - self.player  # Switch player
         return self.get_observation(), reward, done, truncated, {}
 
+
+
     # ---------- Rendering ----------
     def render_matplotlib(self, action=None, player1_type=None, player2_type=None):
         """

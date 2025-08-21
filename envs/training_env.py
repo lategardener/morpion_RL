@@ -292,8 +292,8 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         obs_opponent, reward_opponent, done_opponent, truncated_opponent, _ = super().step(opponent_action)
 
         # Adjust reward if opponent wins or draw
-        if done_opponent:
+        if done_opponent or truncated_opponent:
             final_reward = -self.victory_reward if reward_opponent == self.victory_reward else 0
             return obs_opponent, final_reward, done_opponent, truncated_opponent, info_agent
 
-        return obs_opponent, reward_agent, done_opponent, truncated_opponent, info_agent
+        return obs_opponent, reward_agent, False, False, _

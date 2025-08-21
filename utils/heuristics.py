@@ -754,8 +754,7 @@ def heuristic_points_calcul(playerId, opponentId, board, size, length_victory_pa
         score += (
                 0.05 * number_of_semi_opened_threats(length_victory_pattern - 2, playerId, opponentId, board, size, length_victory_pattern) +
                 0.05 * number_of_opened_threats(length_victory_pattern - 2, playerId, board, size) +
-                0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern) +
-                0.2 * number_of_opened_threats(length_victory_pattern - 1, playerId, board, size)
+                0.075 * number_of_semi_opened_threats(length_victory_pattern - 1, playerId, opponentId, board, size, length_victory_pattern)
         )
     else:
         score += (

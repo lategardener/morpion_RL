@@ -70,7 +70,8 @@ def evaluate_agent_by_opponent(agent, opponent_pool, n_episodes=1000):
             # Play one episode
             while not done:
                 action, _ = agent.predict(obs, deterministic=True, action_masks=mask_fn(env))
-                obs, reward, done, _, _ = env.step(action)
+                obs, reward, terminated, truncated, _ = env.step(action)
+                done = terminated or truncated
 
             # Record a lost game
             if reward == -env.victory_reward:

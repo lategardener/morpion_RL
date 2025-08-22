@@ -238,7 +238,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         Process agent action and opponent action sequentially.
         - Reward agent for blocking opponent wins
         - Remove past game from replay if agent deviates
-        Returns: observation, reward, done, truncated, info
+        Returns: observation, reward, terminated, truncated, info
         """
         valid_moves = np.where(self.valid_actions() == 1)[0]
 
@@ -254,12 +254,12 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         # ---------------------
         # Agent's turn
         # ---------------------
-        obs_agent, reward_agent, done_agent, truncated_agent, info_agent = super().step(action)
+        obs_agent, reward_agent, terminated_agent, truncated_agent, info_agent = super().step(action)
         if self.evaluation:
             self.agent_blows.append(action)
 
-        if done_agent or truncated_agent:
-            return obs_agent, reward_agent, done_agent, truncated_agent, info_agent
+        if terminated_agent or truncated_agent:
+            return obs_agent, reward_agent, terminated_agent, truncated_agent, info_agent
 
         # Reward for blocking imminent opponent win
         if opponent_win_before_moving is not None:
@@ -289,11 +289,11 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         if self.evaluation:
             self.opponent_blows.append(opponent_action)
 
-        obs_opponent, reward_opponent, done_opponent, truncated_opponent, _ = super().step(opponent_action)
+        obs_opponent, reward_opponent, terminated_opponent, truncated_opponent, _ = super().step(opponent_action)
 
         # Adjust reward if opponent wins or draw
-        if done_opponent or truncated_opponent:
+        if terminated_opponent or truncated_opponent:
             final_reward = -self.victory_reward if reward_opponent == self.victory_reward else 0
-            return obs_opponent, final_reward, done_opponent, truncated_opponent, info_agent
+            return obs_opponent, final_reward, terminated_opponent, truncated_opponent, info_agent
 
         return obs_opponent, reward_agent, False, False, _

@@ -146,7 +146,8 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
             console.print(f"\nGame interrupted by user. Exiting the game...", style="bold red")
             return
 
-        obs, reward, done, _, _ = env.step(action)
+        obs, reward, terminated, truncated, _ = env.step(action)
+        done = terminated or truncated
 
         env.render(action=action)
         sleep(render_delay)

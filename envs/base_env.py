@@ -1,3 +1,4 @@
+import pprint
 from pathlib import Path
 import gymnasium as gym
 from matplotlib import patches
@@ -129,12 +130,11 @@ class TicTacToeBaseEnv(gym.Env):
         Returns:
         - observation (dict)
         - reward (float)
-        - done (bool): True if game over
-        - truncated (bool): always False here (Gym API)
+        - terminated (bool): True if game over
+        - truncated (bool): forced end
         - info (dict): optional info
         """
-        done = False
-        truncated = False
+        terminated = False
         reward = 0
 
         # Validate action
@@ -159,19 +159,23 @@ class TicTacToeBaseEnv(gym.Env):
                 win_on_column(column, self.player, self.gameboard, self.pattern_victory_length)
         ):
             reward = self.victory_reward
-            done = True
+            terminated = True
         elif board_is_full(self.gameboard):
             reward = 0
-            done = True
+            terminated = True
         else:
-            reward = REWARD_MISSED_WIN if possible_win else cost_function(
+            if possible_win:
+                print(f"--- agent play in {self.player} position and chose action {action} ---")
+                pprint.pprint(self.gameboard)
+                return self.gameboard, -1, False, True, {"Truncated": "missed a winning move"}
+            reward = cost_function(
                 str(self.player), str(1 - self.player),
                 self.gameboard, self.board_length,
                 self.pattern_victory_length, self.valid_actions()
             )
 
         self.player = 1 - self.player  # Switch player
-        return self.get_observation(), reward, done, truncated, {}
+        return self.get_observation(), reward, terminated, False, {}
 
 
 

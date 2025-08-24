@@ -7,10 +7,10 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 # ==============================
 # Training parameters
 # ==============================
-TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH = 3
-TRAINING_DEFAULT_BOARD_LENGTH = 3
+TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH = 4
+TRAINING_DEFAULT_BOARD_LENGTH = 5
 TRAINING_DEFAULT_FIRST_PLAY_RATE = 0.3
-TRAINING_DEFAULT_REVIEW_RATIO = 0.3
+TRAINING_DEFAULT_REVIEW_RATIO = 0.1
 
 
 # ==============================
@@ -28,7 +28,7 @@ project_root = os.path.abspath(os.path.join(current_dir, '..'))
 AGENTS_DIR = os.path.join(
     project_root,
     'trained_agents',
-    f'agents_{TRAINING_DEFAULT_BOARD_LENGTH}x{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}'
+    f'agents_{TRAINING_DEFAULT_BOARD_LENGTH}x{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}'
 )
 # Ensure agents directory exists
 os.makedirs(AGENTS_DIR, exist_ok=True)
@@ -42,7 +42,7 @@ DEFEAT_PATH = os.path.join(AGENTS_DIR, "defeated_games.json")
 # ==============================
 # Base agent naming
 # ==============================
-BASE_AGENTS_NAME = f"{TRAINING_DEFAULT_BOARD_LENGTH}x{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
+BASE_AGENTS_NAME = f"{TRAINING_DEFAULT_BOARD_LENGTH}x{TRAINING_DEFAULT_BOARD_LENGTH}_{TRAINING_DEFAULT_PATTERN_VICTORY_LENGTH}"
 
 
 
@@ -54,7 +54,7 @@ GAE_LAMBDA = 0.95  # GAE lambda for advantage estimation
 START_ENT_COEF = 0.02  # Initial entropy coefficient
 CHECKPOINT_INTERVAL = 10000  # Number of steps between checkpoints
 IMPROVEMENT_THRESHOLD = 0.03  # Threshold to consider an improvement
-TOTAL_STEPS = 100000  # Total training steps
+TOTAL_STEPS = 20000  # Total training steps
 
 # Learning rate schedule (exponential decay)
 LR_SCHEDULE = exp_decay(3e-4, 1e-5)
@@ -148,8 +148,73 @@ class CustomMLP3x3(BaseFeaturesExtractor):
 
         return self.mlp(normalized_board)
 
+
+class CNNGlobalMLPFeatures(BaseFeaturesExtractor):
+    """
+    CNN + Global Pooling for NxN TicTacToe with normalized board:
+    - +1 for current player's pieces
+    - -1 for opponent's pieces
+    - 0 for empty cells
+    Works for any board size.
+    """
+    def __init__(self, observation_space, features_dim=64):
+        # BaseFeaturesExtractor requires features_dim
+        super().__init__(observation_space, features_dim)
+
+        # Simple convolutions to extract local patterns
+        self.cnn = nn.Sequential(
+            nn.Conv2d(1, 16, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, kernel_size=3, padding=1),
+            nn.ReLU()
+        )
+
+        # Global pooling to reduce NxN -> 32
+        self.global_pool = nn.AdaptiveAvgPool2d(1)
+
+        # Fully-connected layer to produce final features vector
+        self.fc = nn.Sequential(
+            nn.Linear(32, features_dim),
+            nn.ReLU()
+        )
+
+    def forward(self, observations):
+        """
+        observations: dict with 'observation' (board) and 'current_player'
+        """
+        board = observations['observation'].float()
+        player_id = observations['current_player'].long().view(-1, 1, 1)  # shape: batch x 1 x 1
+
+        # Preprocess board to -1/0/+1
+        # +1 if cell == current player
+        # -1 if cell == opponent
+        # 0 if cell is empty
+        normalized_board = th.where(
+            board == player_id, th.ones_like(board),
+            th.where(board == (1 - player_id), -th.ones_like(board), th.zeros_like(board))
+        )
+
+        # Add channel dimension for CNN
+        normalized_board = normalized_board.unsqueeze(1)  # shape: batch x 1 x H x W
+
+        # Pass through CNN
+        x = self.cnn(normalized_board)
+
+        # Apply global pooling to get fixed-size vector
+        x = self.global_pool(x).view(x.size(0), -1)  # shape: batch x 32
+
+        # Fully-connected layer for final features
+        features = self.fc(x)
+        return features
+
 # Stable-Baselines3 policy kwargs
 policy_kwargs = dict(
     features_extractor_class=CustomMLP3x3,
+    features_extractor_kwargs=dict(features_dim=64)
+)
+
+# Stable-Baselines3 policy kwargs
+policy_kwargs_global = dict(
+    features_extractor_class=CNNGlobalMLPFeatures,
     features_extractor_kwargs=dict(features_dim=64)
 )

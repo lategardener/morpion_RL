@@ -9,6 +9,8 @@ from time import sleep
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.align import Align
+from rich.text import Text
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -16,7 +18,6 @@ from envs import TicTacToeBaseEnv
 from agents.ppo_agent import PPOAgent
 from agents.random_agent import RandomAgent
 from agents.smart_random_agent import SmartRandomAgent
-from configs.config import *
 
 console = Console()
 
@@ -120,23 +121,57 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
         1: "Human" if player2 == "human" else type(player2).__name__
     }
 
+    sleep(2)
+    print("\033[H\033[J", end="")
+
+    panel_text = (
+        f"Game start!\n"
+        f"Board: {board_length}x{board_length}\n"
+        f"Victory condition: {victory_pattern_length} in a row\n"
+        f"Players:\n"
+        f"Player 1 : [grey50]{player_types[0]}[/grey50]\n"
+        f"Player 2 : [grey50]{player_types[1]}[/grey50]"
+    )
+
     console.print(
-        Panel(
-            f"Game start!\nBoard: {board_length}x{board_length}\nVictory condition: {victory_pattern_length} in a row\nPlayers:\nPlayer 1 : {player_types[0]}\nPlayer 2 : {player_types[1]}",
-            title="🎮 TicTacToe",
-            style="bold cyan",
-            expand=False,
+        Align.center(
+            Panel(
+                panel_text,
+                style="bold cyan",
+                expand=False,
+            )
         )
     )
+
+    env.render()
+    sleep(render_delay)
+    print("\033[H\033[J", end="")
+
 
     while not done:
         current_player = env.player
         agent = players[current_player]
+
+        # Définir les couleurs pour les joueurs
+        player1_color = "bold green" if current_player == 0 else "grey50"
+        player2_color = "bold green" if current_player == 1 else "grey50"
+
+        panel_text = (
+            f"Game start!\n"
+            f"Board: {board_length}x{board_length}\n"
+            f"Victory condition: {victory_pattern_length} in a row\n"
+            f"Players:\n"
+            f"Player 1 : [{player1_color}]{player_types[0]}[/{player1_color}]\n"
+            f"Player 2 : [{player2_color}]{player_types[1]}[/{player2_color}]"
+        )
+
         console.print(
-            Panel(
-                f"{player_types[current_player]} is making a move...",
-                style="bold magenta",
-                expand=False
+            Align.center(
+                Panel(
+                    panel_text,
+                    style="bold cyan",
+                    expand=False,
+                )
             )
         )
 
@@ -150,17 +185,45 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
         done = terminated or truncated
 
         env.render(action=action)
+
         sleep(render_delay)
+        if not done:
+            print("\033[H\033[J", end="")
+
 
     if reward > 0:
         winner_type = player_types[1 - env.player]
-        console.print(Panel(f"{winner_type} wins the game!", style="bold green", expand=False))
+        console.print(
+            Align.center(
+                Panel(
+                    Text(f"{winner_type} wins the game!", justify="center"),
+                    style="bold green",
+                    expand=False
+                )
+            )
+        )
     elif reward < 0:
         winner_type = player_types[env.player]
-        console.print(Panel(f"{winner_type} wins the game!", style="bold green", expand=False))
+        console.print(
+            Align.center(
+                Panel(
+                    Text(f"{winner_type} wins the game!", justify="center"),
+                    style="bold green",
+                    expand=False
+                )
+            )
+        )
     else:
-        console.print(Panel("It's a draw!", style="bold yellow", expand=False))
-
+        console.print(
+            Align.center(
+                Panel(
+                    Text("It's a draw!", justify="center"),
+                    style="bold yellow",
+                    expand=False
+                )
+            )
+        )
+    sleep(5)
 
 def list_agents():
     """Display available agents in best_agents/ as a table."""

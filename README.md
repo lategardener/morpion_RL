@@ -197,7 +197,7 @@ The agents must follow a strict naming convention:
 
 <br>
 <div align="center">
-  <img src="demo/tic_tac_toe.gif" alt="Demo du jeu" width="300"/>
+  <img src="demo/example.gif" alt="Demo du jeu" width="300"/>
 </div>
 
 ---

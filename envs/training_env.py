@@ -240,14 +240,14 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         - Remove past game from replay if agent deviates
         Returns: observation, reward, terminated, truncated, info
         """
-        valid_moves = np.where(self.valid_actions() == 1)[0]
-
-        # Check if opponent has a winning move before agent plays
-        opponent_win_before_moving = is_winning_move(
-            1 - self.player, self.gameboard,
-            self.board_length, self.pattern_victory_length,
-            valid_moves
-        )
+        # valid_moves = np.where(self.valid_actions() == 1)[0]
+        #
+        # # Check if opponent has a winning move before agent plays
+        # opponent_win_before_moving = is_winning_move(
+        #     1 - self.player, self.gameboard,
+        #     self.board_length, self.pattern_victory_length,
+        #     valid_moves
+        # )
 
         self.number_turn += 1
 
@@ -261,16 +261,16 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
         if terminated_agent or truncated_agent:
             return obs_agent, reward_agent, terminated_agent, truncated_agent, info_agent
 
-        # Reward for blocking imminent opponent win
-        if opponent_win_before_moving is not None:
-            valid_moves_after_play = np.where(self.valid_actions() == 1)[0]
-            opponent_win_after_moving = is_winning_move(
-                self.player, self.gameboard,
-                self.board_length, self.pattern_victory_length,
-                valid_moves_after_play
-            )
-            if opponent_win_after_moving is None:
-                reward_agent += REWARD_BLOCK_OPP_WIN
+        # # Reward for blocking imminent opponent win
+        # if opponent_win_before_moving is not None:
+        #     valid_moves_after_play = np.where(self.valid_actions() == 1)[0]
+        #     opponent_win_after_moving = is_winning_move(
+        #         self.player, self.gameboard,
+        #         self.board_length, self.pattern_victory_length,
+        #         valid_moves_after_play
+        #     )
+        #     if opponent_win_after_moving is None:
+        #         reward_agent += REWARD_BLOCK_OPP_WIN
 
         # ---------------------
         # Opponent's turn

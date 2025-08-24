@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import os
 from datetime import datetime
 from PIL import Image
+import shutil
+
 
 from configs.config import *
 from utils.heuristics import *
@@ -141,12 +143,6 @@ class TicTacToeBaseEnv(gym.Env):
         if self.valid_actions()[action] == 0:
             raise ValueError("Invalid action: cell already occupied.")
 
-        # Check if action can lead to immediate win
-        possible_win = is_winning_move(
-            self.player, self.gameboard, self.board_length,
-            self.pattern_victory_length, self.valid_actions()
-        )
-
         # Map 1D action to 2D board coordinates
         line, column = divmod(action, self.board_length)
         self.gameboard[line][column] = self.player
@@ -164,10 +160,6 @@ class TicTacToeBaseEnv(gym.Env):
             reward = 0
             terminated = True
         else:
-            if possible_win:
-                print(f"--- agent play in {self.player} position and chose action {action} ---")
-                pprint.pprint(self.gameboard)
-                return self.gameboard, -1, False, True, {"Truncated": "missed a winning move"}
             reward = cost_function(
                 str(self.player), str(1 - self.player),
                 self.gameboard, self.board_length,
@@ -260,22 +252,36 @@ class TicTacToeBaseEnv(gym.Env):
         else:
             raise NotImplementedError(f"render_mode '{self.render_mode}' not supported.")
 
+
     def _render_ansi(self, action):
         """
-        Render the board in terminal using ANSI colors.
+        Render the board in terminal using ANSI colors, centered horizontally.
 
         Parameters:
         - action (int): last move to highlight
         """
+        term_width = shutil.get_terminal_size((80, 20)).columns  # largeur du terminal
+
         line, column = divmod(action, self.board_length) if action else -1, -1
-        print("     ", end="")
+
+        # Calculer la largeur totale du plateau
+        cell_width = 4  # largeur approximative d'une cellule, "| X "
+        board_width = self.board_length * cell_width + 5  # +5 pour l'index et les bordures
+
+        pad = (term_width - board_width) // 2 -2 # padding à gauche
+        pad_str = " " * max(pad, 0)
+
+        # En-tête des colonnes
+        print(pad_str + "     ", end="")
         for i in range(self.board_length):
             print(f" {i}  ", end="")
         print()
 
-        print("    " + WHITE + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
+        # Bord supérieur
+        print(pad_str + "    " + WHITE + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
+
         for row_index, row in enumerate(self.gameboard):
-            print(f"  {row_index} ", end="")
+            print(pad_str + f"  {row_index} ", end="")
             for col_index, pattern in enumerate(row):
                 symbol = int(pattern)
                 color = None
@@ -292,9 +298,11 @@ class TicTacToeBaseEnv(gym.Env):
             print(WHITE + "|" + RESET)
 
             if row_index < self.board_length - 1:
-                print("    " + WHITE + "├———" + "•———" * (self.board_length - 1) + "┤" + RESET)
+                print(pad_str + "    " + WHITE + "├———" + "•———" * (self.board_length - 1) + "┤" + RESET)
             else:
-                print("    " + WHITE + "└———" + "┴———" * (self.board_length - 1) + "┘" + RESET)
+                print(pad_str + "    " + WHITE + "└———" + "┴———" * (self.board_length - 1) + "┘" + RESET)
+
+
 
 
 

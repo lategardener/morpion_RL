@@ -170,6 +170,9 @@ The game supports human players as well as AI agents (`RandomAgent`, `SmartRando
 
 To play with PPO agents, you must first **train them** and then move the trained agents into the `best_agents/` folder.  
 The agents must follow a strict naming convention:
+
+`agent_v{version}_{board_length}x{board_length}_{victory_pattern_length}.zip`
+
 - **`version`** → identifier of the agent (integer). It allows you to differentiate multiple agents trained on the **same board size** and **victory pattern**.
 - **`board_length`** → board size (square), must match the size the agent was trained on.
 - **`victory_pattern_length`** → number of consecutive symbols required to win, must also match the training configuration.

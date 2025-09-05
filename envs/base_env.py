@@ -260,26 +260,30 @@ class TicTacToeBaseEnv(gym.Env):
         Parameters:
         - action (int): last move to highlight
         """
-        term_width = shutil.get_terminal_size((80, 20)).columns  # largeur du terminal
+        # Terminal width (fallback 80x20 if detection fails)
+        term_width = shutil.get_terminal_size((80, 20)).columns
 
-        line, column = divmod(action, self.board_length) if action else -1, -1
+        # Compute row and column from the action (last move position)
+        line, column = divmod(action, self.board_length) if action else (-1, -1)
 
-        # Calculer la largeur totale du plateau
-        cell_width = 4  # largeur approximative d'une cellule, "| X "
-        board_width = self.board_length * cell_width + 5  # +5 pour l'index et les bordures
+        # Compute the total width of the board
+        cell_width = 4  # approximate width of a cell, like "| X "
+        board_width = self.board_length * cell_width + 5  # +5 for index and borders
 
-        pad = (term_width - board_width) // 2 -2 # padding à gauche
+        # Left padding to center the board in the terminal
+        pad = (term_width - board_width) // 2 - 2
         pad_str = " " * max(pad, 0)
 
-        # En-tête des colonnes
+        # Column header
         print(pad_str + "     ", end="")
         for i in range(self.board_length):
             print(f" {i}  ", end="")
         print()
 
-        # Bord supérieur
+        # Top border
         print(pad_str + "    " + WHITE + "┌———" + "┬———" * (self.board_length - 1) + "┐" + RESET)
 
+        # Render each row of the board
         for row_index, row in enumerate(self.gameboard):
             print(pad_str + f"  {row_index} ", end="")
             for col_index, pattern in enumerate(row):
@@ -289,6 +293,7 @@ class TicTacToeBaseEnv(gym.Env):
                     color = BLUE
                 elif symbol == 1:
                     color = RED
+                # Highlight the last move played
                 if col_index == column and row_index == line:
                     color += BOLD
                 if symbol != EMPTY_CELL:
@@ -297,10 +302,13 @@ class TicTacToeBaseEnv(gym.Env):
                     print(WHITE + "|   " + RESET, end="")
             print(WHITE + "|" + RESET)
 
+            # Intermediate borders between rows
             if row_index < self.board_length - 1:
                 print(pad_str + "    " + WHITE + "├———" + "•———" * (self.board_length - 1) + "┤" + RESET)
+            # Bottom border of the board
             else:
                 print(pad_str + "    " + WHITE + "└———" + "┴———" * (self.board_length - 1) + "┘" + RESET)
+
 
 
 

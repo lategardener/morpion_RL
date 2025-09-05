@@ -131,7 +131,7 @@ class TicTacToeTrainingEnv(TicTacToeBaseEnv):
             elif opponent == "smart_random":
                 agents["smart_random"] = SmartRandomAgent()
             elif opponent.endswith(".zip") and os.path.exists(opponent):
-                agents[opponent] = PPOAgent(agent_path=opponent, evaluation=True)
+                agents[opponent] = PPOAgent(agent_path=opponent)
         return agents
 
     # ---------------------------

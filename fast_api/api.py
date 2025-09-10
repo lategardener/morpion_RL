@@ -27,11 +27,20 @@ async def observation():
     global env
     if env is None:
         return None
-    return env.get_observation()
+    obs = env.get_observation()
+    return {
+        "observation": obs["observation"].tolist(),
+        "action_mask": obs["action_mask"].tolist(),
+        "current_player" : obs["current_player"].item()
+    }
 
 @app.post("/initEnv")
 async def init_env(configs: EnvConfigs):
     global env
+    if env is not None:
+        return{
+            "message": "Env already initialized",
+        }
     env = TicTacToeBaseEnv(board_length=configs.board_length,
                            pattern_victory_length=configs.pattern_victory_length,
                            victory_reward=configs.victory_reward
@@ -42,7 +51,7 @@ async def init_env(configs: EnvConfigs):
         "pattern_victory_length": env.pattern_victory_length,
         "victory_reward": env.victory_reward,
         "player": env.player,
-        "gameboard": env.gameboard.tolist()  # numpy array -> liste
+        "gameboard": env.gameboard.tolist()
     }
 
 @app.get("/agent/{board_length}/{win_pattern_length}/{version}/")

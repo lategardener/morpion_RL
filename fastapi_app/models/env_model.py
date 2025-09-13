@@ -1,7 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class EnvConfigs(BaseModel):
-    board_length : int
-    pattern_victory_length : int
-    victory_reward : int
+    board_length : int = Field(default=3, ge=3)
+    pattern_victory_length : int = Field(default=3, ge=3)

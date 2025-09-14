@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import axios from "axios"
 const response = ref("")
-const emit = defineEmits(['game_mode', 'GameMode'])
+const emit = defineEmits(['game_mode'])
 async function InitEnv(board_length, pattern_victory_length){
   try{
     const configs = {
@@ -11,7 +11,7 @@ async function InitEnv(board_length, pattern_victory_length){
     }
 
     response.value = await axios.post("http://127.0.0.1:8000/game/initEnv", configs)
-    emit('game_mode')
+    emit('game_mode', 'GameMode')
   }
   catch (error){
     response.value = error

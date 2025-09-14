@@ -1,6 +1,5 @@
 from envs import TicTacToeBaseEnv
 from fastapi_app.models.env_model import EnvConfigs
-from fastapi import Request
 
 
 def observation(app):

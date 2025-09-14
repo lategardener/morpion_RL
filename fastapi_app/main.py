@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from agents import PPOAgent, RandomAgent, SmartRandomAgent
+from agents.human import Human
 from envs import TicTacToeBaseEnv
 from .routers import game
 app = FastAPI()
@@ -20,6 +21,8 @@ app.add_middleware(
 
 
 app.state.env: TicTacToeBaseEnv | None  = None
-app.state.agent: PPOAgent | RandomAgent | SmartRandomAgent | None = None
+app.state.player1: PPOAgent | RandomAgent | SmartRandomAgent | Human | None = None
+app.state.player2: PPOAgent | RandomAgent | SmartRandomAgent | Human | None = None
+app.state.game_mode: str |  None = None
 
 app.include_router(game.router, prefix="/game")

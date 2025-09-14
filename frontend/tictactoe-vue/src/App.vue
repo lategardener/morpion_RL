@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import Welcome from './Welcome.vue'
 import BoardChoice from './BoardChoice.vue'
+import GameMode from "./GameMode.vue"
+
 const page = ref("Welcome")
 
 </script>

@@ -21,8 +21,7 @@ app.add_middleware(
 
 
 app.state.env: TicTacToeBaseEnv | None  = None
-app.state.player1: PPOAgent | RandomAgent | SmartRandomAgent | Human | None = None
-app.state.player2: PPOAgent | RandomAgent | SmartRandomAgent | Human | None = None
+app.state.agent: PPOAgent | RandomAgent | SmartRandomAgent | Human | None = None
 app.state.game_mode: str |  None = None
 
 app.include_router(game.router, prefix="/game")

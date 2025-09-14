@@ -18,6 +18,7 @@ from envs import TicTacToeBaseEnv
 from agents.ppo_agent import PPOAgent
 from agents.random_agent import RandomAgent
 from agents.smart_random_agent import SmartRandomAgent
+from agents.human import Human
 
 console = Console()
 
@@ -33,7 +34,7 @@ def load_agent(agent_type, version=None, board_length=None, victory_pattern_leng
     elif agent_type == "smart_random":
         return SmartRandomAgent()
     elif agent_type == "human":
-        return "human"
+        return Human()
     elif agent_type == "agent":
         if version is None or board_length is None:
             console.print(
@@ -65,25 +66,14 @@ def load_agent(agent_type, version=None, board_length=None, victory_pattern_leng
         sys.exit(1)
 
 
-def get_action(env, agent, board_length, victory_patteen_length):
+def get_action(env, agent, board_length, victory_pattern_length):
+    global console
+
     """Choose the action based on agent type."""
     valid_moves = np.where(env.valid_actions() == 1)[0]
 
-    if agent == "human":
-        valid_moves_list = [int(i) for i in valid_moves]
-        console.print(f"Available moves: {valid_moves}", style="bold cyan")
-
-        while True:
-            try:
-                move = int(input(f"Enter a valid cell index from the list above: "))
-                if move in valid_moves_list:
-                    return move
-                console.print("❌ Invalid cell. Please choose from the available cells.", style="bold red")
-            except ValueError:
-                console.print("❌ Invalid input. Please enter a number.", style="bold red")
-            except KeyboardInterrupt:
-                pass
-            return sys.exit
+    if isinstance(agent, Human):
+        return agent.play(valid_moves=valid_moves, console=console)
 
     elif isinstance(agent, RandomAgent):
         return agent.play(valid_moves=valid_moves)
@@ -94,7 +84,7 @@ def get_action(env, agent, board_length, victory_patteen_length):
             gameboard=env.gameboard,
             valid_moves=valid_moves,
             board_length=board_length,
-            pattern_victory_length=victory_patteen_length,
+            pattern_victory_length=victory_pattern_length,
         )
 
     elif isinstance(agent, PPOAgent):
@@ -117,8 +107,8 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
     done = False
     players = {0: player1, 1: player2}
     player_types = {
-        0: "Human" if player1 == "human" else type(player1).__name__,
-        1: "Human" if player2 == "human" else type(player2).__name__
+        0: type(player1).__name__,
+        1: type(player2).__name__
     }
 
     sleep(2)
@@ -145,12 +135,14 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
 
     env.render()
     sleep(render_delay)
-    print("\033[H\033[J", end="")
+
 
 
     while not done:
         current_player = env.player
         agent = players[current_player]
+        action = int(get_action(env, agent, board_length, victory_pattern_length))
+        print("\033[H\033[J", end="")
 
         # Définir les couleurs pour les joueurs
         player1_color = "bold green" if current_player == 0 else "grey50"
@@ -175,7 +167,6 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
             )
         )
 
-        action = int(get_action(env, agent, board_length, victory_pattern_length))
 
         if not isinstance(action, int):
             console.print(f"\nGame interrupted by user. Exiting the game...", style="bold red")
@@ -187,8 +178,6 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
         env.render(action=action)
 
         sleep(render_delay)
-        if not done:
-            print("\033[H\033[J", end="")
 
 
     if reward > 0:
@@ -223,7 +212,7 @@ def play_game(player1, player2, board_length, victory_pattern_length, render_del
                 )
             )
         )
-    sleep(5)
+    sleep(2)
 
 def list_agents():
     """Display available agents in best_agents/ as a table."""

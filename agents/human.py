@@ -1,4 +1,11 @@
+import shutil
 import sys
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.align import Align
+from rich.text import Text
+
 
 class Human:
     """
@@ -39,14 +46,45 @@ class Human:
 
         elif self.mode == "console":
             # Console mode: ask the player to input a move manually
-            console.print(f"Available moves: {valid_moves}", style="bold cyan")
+            console.print(
+                Align.center(
+                    Panel(
+                        f"Available moves: {valid_moves}",
+                        style="bold cyan",
+                        expand=False,
+                    )
+                )
+            )
             while True:
                 try:
-                    move = int(input("Enter a valid cell index: "))
+                    columns = shutil.get_terminal_size().columns
+                    prompt_text = "Enter a valid cell index: "
+
+                    padding = (columns - len(prompt_text)) // 2
+                    prompt = " " * padding + prompt_text
+
+                    move = int(input(prompt))
                     if move in valid_moves:
                         return move
-                    console.print("❌ Invalid cell. Please try again.", style="bold red")
+
+                    console.print(
+                        Align.center(
+                            Panel(
+                                "❌ Invalid cell. Please try again.",
+                                style="bold red",
+                                expand=False,
+                            )
+                        )
+                    )
                 except ValueError:
-                    console.print("❌ Invalid input. Please enter a number.", style="bold red")
+                    console.print(
+                        Align.center(
+                            Panel(
+                                "❌ Invalid input. Please enter a number.",
+                                style="bold red",
+                                expand=False,
+                            )
+                        )
+                    )
                 except KeyboardInterrupt:
                     return sys.exit

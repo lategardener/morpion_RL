@@ -1,5 +1,5 @@
 from envs import TicTacToeBaseEnv
-from fastapi_app.models.env_model import EnvConfigs
+from fastapi_app.models.env_model import EnvConfigs, ActionPlayed
 
 
 def observation(app):
@@ -9,7 +9,9 @@ def observation(app):
     return {
         "observation": obs["observation"].tolist(),
         "action_mask": obs["action_mask"].tolist(),
-        "current_player" : obs["current_player"].item()
+        "current_player" : obs["current_player"].item(),
+        "is_done": obs["is_done"].item(),
+        "board_size": app.state.env.board_length,
     }
 
 def init_env(app, configs: EnvConfigs):
@@ -25,4 +27,16 @@ def init_env(app, configs: EnvConfigs):
         "message": "Success",
         **configs.model_dump(),
         "gameboard": app.state.env.gameboard.tolist()
+    }
+
+def action_played(app, action: ActionPlayed):
+
+    if app.state.env is None:
+        return{
+            "message": "Env not initialized",
+        }
+    app.state.env.step(action.played)
+    return {
+        "message": "Success",
+        "move played": action.played,
     }

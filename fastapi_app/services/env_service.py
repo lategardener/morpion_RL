@@ -35,8 +35,8 @@ def action_played(app, action: ActionPlayed):
         return{
             "message": "Env not initialized",
         }
-    app.state.env.step(action.played)
+    app.state.env.step(action.move)
     return {
         "message": "Success",
-        "move played": action.played,
+        "move played": action.move,
     }

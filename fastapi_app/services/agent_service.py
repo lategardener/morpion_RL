@@ -1,11 +1,11 @@
 import os
 
 from fastapi import Path
-from agents import PPOAgent
+from agents import PPOAgent, RandomAgent, SmartRandomAgent
 from typing import Annotated
 import re
 
-from fastapi_app.models.agent_model import GameModeConfigs
+from fastapi_app.models.agent_model import GameModeConfigs, AgentConfigs
 
 
 def init_game_mode(app, game_mode: GameModeConfigs) :
@@ -38,6 +38,17 @@ def get_available_opponents(app):
             opponents.append({"name" : f"AI agent version {version}", "version": f"{version}"})
 
     return opponents
+
+def save_agent(app, agent_config:AgentConfigs):
+    agent = agent_config.agent
+    env = app.state.env
+    if agent["name"] == "Random":
+        app.state.agent = RandomAgent()
+    elif agent["name"] == "Smart Random":
+        app.state.agent = SmartRandomAgent()
+    else:
+        agent_path = f"best_agents/agent_v{agent['version']}_{env.board_length}x{env.board_length}_{env.victory_pattern_length}.zip"
+        app.state.agent = PPOAgent(agent_path)
 
 def get_agent(board_length: Annotated[int, Path(title="Path int", description="Board lines and columns number", ge=3)],
               win_pattern_length: Annotated[int, Path(title="Path int", description="Number of align pawns to win", ge=3)],

@@ -49,7 +49,7 @@ async function play(move){
 }
 
 watch(currentPlayer, (newCurrentPlayer) => {
-  if (currentPlayer.value !== playOrder.value){
+  if (newCurrentPlayer !== playOrder.value){
     //pass
   }
 })

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request
 
-from fastapi_app.models.agent_model import GameModeConfigs
+from fastapi_app.models.agent_model import GameModeConfigs, AgentConfigs
 from fastapi_app.models.env_model import EnvConfigs, ActionPlayed
-from fastapi_app.services.agent_service import init_game_mode, get_available_opponents
+from fastapi_app.services.agent_service import init_game_mode, get_available_opponents, save_agent
 from fastapi_app.services.env_service import init_env, observation, action_played
 
 router = APIRouter()
@@ -18,6 +18,10 @@ def init_game_mode_route(request: Request, configs: GameModeConfigs):
 @router.post("/actionPlayed")
 def action_played_(request: Request, action: ActionPlayed):
     return action_played(request.app, action)
+
+@router.post("/saveAgent")
+def save_agent_(request: Request, agent: AgentConfigs):
+    return save_agent(request.app, agent)
 
 @router.get("/observation")
 def get_observation_route(request: Request):

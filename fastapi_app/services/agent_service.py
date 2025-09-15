@@ -25,17 +25,17 @@ def get_available_opponents(app):
     if not os.path.exists(agents_dir):
         raise AssertionError("Agent dir not found")
 
-    opponents = {
-        "Random": {},
-        "Smart Random": {},
-    }
+    opponents = [
+        {"name": "Random"},
+        {"name" : "Smart Random"}
+    ]
 
     pattern = rf"agent_v(\d+)_{board_size}x{board_size}_{pattern_vl}\.zip"
     for agent_path in sorted(os.listdir(agents_dir)):
         match = re.match(pattern, agent_path)
         if match:
             version = match.groups()[0]
-            opponents[f"AI agent version {version}"] = {"version": f"{version}"}
+            opponents.append({"name" : f"AI agent version {version}", "version": f"{version}"})
 
     return opponents
 

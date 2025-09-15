@@ -62,9 +62,11 @@ class TicTacToeBaseEnv(gym.Env):
             "observation": gym.spaces.Box(low=0, high=3, shape=(board_length, board_length), dtype=np.int8),
             "action_mask": gym.spaces.Box(low=0, high=1, shape=(board_length * board_length,), dtype=np.float32),
             "current_player": gym.spaces.Box(low=0.0, high=1.0, shape=(), dtype=np.float32),
+            "is_done": gym.spaces.Discrete(2)
         })
 
         self.victory_reward = victory_reward  # Reward for winning the game
+        self.is_done = False
 
     # ---------- Getters and setters ----------
     def set_player(self, p):
@@ -108,6 +110,7 @@ class TicTacToeBaseEnv(gym.Env):
             "observation": self.gameboard.copy(),
             "action_mask": self.valid_actions().astype(np.float32),
             "current_player": np.array(self.player, dtype=np.float32),
+            "is_done": np.array(int(self.is_done), dtype=np.float32)
         }
 
     def reset(self, seed=None, options=None):
@@ -156,9 +159,11 @@ class TicTacToeBaseEnv(gym.Env):
         ):
             reward = self.victory_reward
             terminated = True
+            self.is_done = True
         elif board_is_full(self.gameboard):
             reward = 0
             terminated = True
+            self.is_done = True
         else:
             reward = cost_function(
                 str(self.player), str(1 - self.player),

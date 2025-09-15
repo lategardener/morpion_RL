@@ -1,11 +1,13 @@
 <script setup>
 import {onMounted, ref} from 'vue'
 import axios from "axios"
-const opponents = ref({})
+const opponents = ref([])
 async function GetOpponent(){
   try{
 
-    opponents.value = await axios.get("http://127.0.0.1:8000/game/opponents")
+    const response = await axios.get("http://127.0.0.1:8000/game/opponents")
+    opponents.value = response.data
+
   }
   catch (error){
     opponents.value = error
@@ -19,7 +21,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <h3>{{opponents}}</h3>
+  <button v-for="opponent in opponents" :key="opponent.name" @click="$emit('game', 'Game', opponent.name)">
+    {{ opponent.name }}
+  </button>
 </template>
 
 <style scoped>

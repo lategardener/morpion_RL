@@ -6,4 +6,4 @@ class EnvConfigs(BaseModel):
     pattern_victory_length : int = Field(default=3, ge=3)
 
 class ActionPlayed(BaseModel):
-    action : int
+    move : int

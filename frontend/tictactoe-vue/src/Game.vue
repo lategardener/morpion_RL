@@ -52,10 +52,17 @@ async function userPlayed(action){
   }
 }
 
+async function reset(){
+  const response = await axios.post("http://127.0.0.1:8000/game/resetEnv")
+  await GetBoardInfo()
+  console.log("Reset response :", response.data)
+  playOrder.value = 0
+}
+
 watch(currentPlayer, async (newCurrentPlayer) => {
   console.log(newCurrentPlayer)
   console.log(playOrder.value)
-  if (newCurrentPlayer !== playOrder.value) {
+  if (newCurrentPlayer !== playOrder.value && !isDone.value) {
     console.log("here")
     const response = await axios.get("http://127.0.0.1:8000/game/move")
     console.log(response)
@@ -74,8 +81,12 @@ onMounted(() => {
 <template>
 <div :class="boardContainer_">
   <div class="envActions">
-    <button class="glass" :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}">Restart</button>
-    <button class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">Change configs</button>
+    <button class="glass" :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}" @click="reset()">
+      Restart
+    </button>
+    <button class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">
+      Change configs
+    </button>
   </div>
   <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
     <div v-for="(col, colIndex) in row" :key="colIndex">

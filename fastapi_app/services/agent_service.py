@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 from fastapi import Path
 from agents import PPOAgent, RandomAgent, SmartRandomAgent
 from typing import Annotated
@@ -50,11 +51,26 @@ def save_agent(app, agent_config:AgentConfigs):
         agent_path = f"best_agents/agent_v{agent['version']}_{env.board_length}x{env.board_length}_{env.victory_pattern_length}.zip"
         app.state.agent = PPOAgent(agent_path)
 
-def get_agent(board_length: Annotated[int, Path(title="Path int", description="Board lines and columns number", ge=3)],
-              win_pattern_length: Annotated[int, Path(title="Path int", description="Number of align pawns to win", ge=3)],
-              version: Annotated[int,Path(title="Path int", description="Agent version", ge=1)]):
 
-    agent = f"best_agents/agent_v{version}_{board_length}x{board_length}_{win_pattern_length}.zip"
-    if os.path.exists(agent):
-        return {"agent": PPOAgent(agent)}
-    return None
+def get_agent_move(app):
+    agent = app.state.agent
+    env = app.state.env
+    valid_moves = np.where(env.valid_actions() == 1)[0]
+
+    if isinstance(agent, RandomAgent):
+        return int(agent.play(valid_moves=valid_moves))
+
+    elif isinstance(agent, SmartRandomAgent):
+        return int(agent.play(
+            player=env.player,
+            gameboard=env.gameboard,
+            valid_moves=valid_moves,
+            board_length=env.board_length,
+            pattern_victory_length=env.victory_pattern_length,
+        ))
+
+    elif isinstance(agent, PPOAgent):
+        obs = env.get_observation()
+        return int(agent.play(obs))
+    else:
+        raise AssertionError("Agent not implemented")

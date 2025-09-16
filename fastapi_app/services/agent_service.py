@@ -66,7 +66,7 @@ def get_agent_move(app):
             gameboard=env.gameboard,
             valid_moves=valid_moves,
             board_length=env.board_length,
-            pattern_victory_length=env.victory_pattern_length,
+            pattern_victory_length=env.pattern_victory_length,
         ))
 
     elif isinstance(agent, PPOAgent):

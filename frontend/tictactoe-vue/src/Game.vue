@@ -74,8 +74,8 @@ onMounted(() => {
 <template>
 <div :class="boardContainer_">
   <div class="envActions">
-    <button :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}">Restart</button>
-    <button :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">Change configs</button>
+    <button class="glass" :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}">Restart</button>
+    <button class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">Change configs</button>
   </div>
   <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
     <div v-for="(col, colIndex) in row" :key="colIndex">
@@ -88,26 +88,41 @@ onMounted(() => {
 </div>
 </template>
 
+
 <style scoped>
+
+:global(body) {
+  margin: 0;
+  padding: 0;
+}
+
 .cell {
   width: 100px;
   height: 100px;
   font-weight: bold;
   font-size: 50px;
-  color:cornflowerblue;
+  color: #1049af;
   /* From https://css.glass */
-  background: rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
-  border: 1px solid rgba(255, 255, 255, 0.23);
+  backdrop-filter: blur(7.9px);
+  -webkit-backdrop-filter: blur(7.9px);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+
 }
 
 .agent_color{
-  color : mediumvioletred;
+  color : #ae0543;
 }
 
+.boardContainer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
 
 .row {
   display: flex;
@@ -119,9 +134,21 @@ onMounted(() => {
   align-items: center;
   height: 100vh;
   flex-direction: column;
+  background: #020024;
+  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 35%, rgba(0, 212, 255, 1) 100%);
 }
 
 .envActions{
   margin-bottom: 50px;
+}
+
+.glass{
+  /* From https://css.glass */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(7.9px);
+  -webkit-backdrop-filter: blur(7.9px);
+  border: 1px solid rgba(255, 255, 255, 0.26);
 }
 </style>

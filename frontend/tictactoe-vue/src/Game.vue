@@ -52,10 +52,17 @@ async function userPlayed(action){
   }
 }
 
+async function reset(){
+  const response = await axios.post("http://127.0.0.1:8000/game/resetEnv")
+  await GetBoardInfo()
+  console.log("Reset response :", response.data)
+  playOrder.value = 0
+}
+
 watch(currentPlayer, async (newCurrentPlayer) => {
   console.log(newCurrentPlayer)
   console.log(playOrder.value)
-  if (newCurrentPlayer !== playOrder.value) {
+  if (newCurrentPlayer !== playOrder.value && !isDone.value) {
     console.log("here")
     const response = await axios.get("http://127.0.0.1:8000/game/move")
     console.log(response)
@@ -73,6 +80,14 @@ onMounted(() => {
 
 <template>
 <div :class="boardContainer_">
+  <div class="envActions">
+    <button class="glass" :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}" @click="reset()">
+      Restart
+    </button>
+    <button class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">
+      Change configs
+    </button>
+  </div>
   <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
     <div v-for="(col, colIndex) in row" :key="colIndex">
       <button :class="[cell_, col === 1 ? agent_color_ : '']" @click="userPlayed(board_size * rowIndex + colIndex)">
@@ -80,25 +95,36 @@ onMounted(() => {
       </button>
     </div>
   </div>
+
 </div>
 </template>
 
+
 <style scoped>
+
+:global(body) {
+  margin: 0;
+  padding: 0;
+}
+
 .cell {
   width: 100px;
   height: 100px;
   font-weight: bold;
   font-size: 50px;
-  color:cornflowerblue;
+  color: #1049af;
+  /* From https://css.glass */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(7.9px);
+  -webkit-backdrop-filter: blur(7.9px);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+
 }
 
 .agent_color{
-  color : mediumvioletred;
-}
-
-
-.row {
-  display: flex; /* chaque ligne s’affiche en ligne */
+  color : #ae0543;
 }
 
 .boardContainer{
@@ -107,5 +133,33 @@ onMounted(() => {
   align-items: center;
   height: 100vh;
   flex-direction: column;
+}
+
+.row {
+  display: flex;
+}
+
+.boardContainer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+  background: #020024;
+  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 35%, rgba(0, 212, 255, 1) 100%);
+}
+
+.envActions{
+  margin-bottom: 50px;
+}
+
+.glass{
+  /* From https://css.glass */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(7.9px);
+  -webkit-backdrop-filter: blur(7.9px);
+  border: 1px solid rgba(255, 255, 255, 0.26);
 }
 </style>

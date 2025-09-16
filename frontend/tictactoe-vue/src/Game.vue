@@ -10,6 +10,7 @@ const agent_color_ = ref('agent_color')
 const boardContainer_ = ref('boardContainer')
 const currentPlayer = ref(0)
 const actionMask = ref([])
+const winner = ref(null)
 
 async function GetBoardInfo(){
   try{
@@ -46,7 +47,7 @@ async function userPlayed(action){
   console.log(!isDone.value && currentPlayer.value === playOrder.value)
   if (!isDone.value && currentPlayer.value === playOrder.value){
     console.log("In...")
-    console.log("action", action)
+    console.log("action : ", action)
     await play(action)
     await GetBoardInfo()
   }
@@ -57,25 +58,44 @@ async function reset(){
   await GetBoardInfo()
   console.log("Reset response :", response.data)
   playOrder.value = 0
+  winner.value = null
 }
 
 watch(currentPlayer, async (newCurrentPlayer) => {
   console.log(newCurrentPlayer)
   console.log(playOrder.value)
   if (newCurrentPlayer !== playOrder.value && !isDone.value) {
-    console.log("here")
     const response = await axios.get("http://127.0.0.1:8000/game/move")
-    console.log(response)
+    console.log("Move :", response.data)
     const action = response.data
     await play(action)
     await GetBoardInfo()
   }
 })
 
+watch(isDone, (isDoneUpdate) => {
+  console.log("Is done ?", isDoneUpdate)
+  if (isDoneUpdate === 1){
+    const onlyOnes = actionMask.value.every(v => v === 0);
+    console.log("Is board full ?", onlyOnes)
+    if (onlyOnes === true){
+      winner.value = "Draw"
+    }
+    else if (playOrder.value === currentPlayer.value){
+      winner.value = "Agent win"
+    }
+    else{
+      winner.value = "You win"
+    }
+
+    console.log("Winner ?", winner.value)
+  }
+})
 
 onMounted(() => {
   GetBoardInfo()
 })
+
 </script>
 
 <template>
@@ -95,7 +115,7 @@ onMounted(() => {
       </button>
     </div>
   </div>
-
+  <p :style="{ visibility: winner ? 'visible' : 'hidden', height: '60px', padding: '10px' }">{{ winner }}</p>
 </div>
 </template>
 

@@ -6,7 +6,7 @@ const playOrder = ref(0)
 const isDone = ref(0)
 const board_size = ref(0)
 const cell_ = ref('cell')
-const globalDiv_ = ref('globalDiv')
+const agent_color_ = ref('agent_color')
 const boardContainer_ = ref('boardContainer')
 const currentPlayer = ref(0)
 const actionMask = ref([])
@@ -73,24 +73,33 @@ onMounted(() => {
 
 <template>
 <div :class="boardContainer_">
-  <div v-for="(row, rowIndex) in board" :key="rowIndex">
-    <span v-for="(col, colIndex) in row" :key="colIndex">
-      <button :class="cell_" @click="userPlayed(board_size * rowIndex + colIndex)">
+  <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
+    <div v-for="(col, colIndex) in row" :key="colIndex">
+      <button :class="[cell_, col === 1 ? agent_color_ : '']" @click="userPlayed(board_size * rowIndex + colIndex)">
         {{ col === 3 ? '' : col === 0 ? 'X' : 'O' }}
       </button>
-    </span>
+    </div>
   </div>
 </div>
 </template>
 
 <style scoped>
 .cell {
-  width: 50px;
-  height: 50px;
-  color: green;
+  width: 100px;
+  height: 100px;
   font-weight: bold;
+  font-size: 50px;
+  color:cornflowerblue;
 }
 
+.agent_color{
+  color : mediumvioletred;
+}
+
+
+.row {
+  display: flex; /* chaque ligne s’affiche en ligne */
+}
 
 .boardContainer{
   display: flex;

@@ -73,6 +73,10 @@ onMounted(() => {
 
 <template>
 <div :class="boardContainer_">
+  <div class="envActions">
+    <button :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}">Restart</button>
+    <button :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">Change configs</button>
+  </div>
   <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
     <div v-for="(col, colIndex) in row" :key="colIndex">
       <button :class="[cell_, col === 1 ? agent_color_ : '']" @click="userPlayed(board_size * rowIndex + colIndex)">
@@ -80,6 +84,7 @@ onMounted(() => {
       </button>
     </div>
   </div>
+
 </div>
 </template>
 
@@ -90,6 +95,13 @@ onMounted(() => {
   font-weight: bold;
   font-size: 50px;
   color:cornflowerblue;
+  /* From https://css.glass */
+  background: rgba(255, 255, 255, 0.52);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border: 1px solid rgba(255, 255, 255, 0.23);
 }
 
 .agent_color{
@@ -98,7 +110,7 @@ onMounted(() => {
 
 
 .row {
-  display: flex; /* chaque ligne s’affiche en ligne */
+  display: flex;
 }
 
 .boardContainer{
@@ -107,5 +119,9 @@ onMounted(() => {
   align-items: center;
   height: 100vh;
   flex-direction: column;
+}
+
+.envActions{
+  margin-bottom: 50px;
 }
 </style>

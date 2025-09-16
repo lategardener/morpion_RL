@@ -15,8 +15,6 @@ const opponent = ref("")
   <Opponent v-else-if="page === 'Opponent'" @game="(GamePage, opponentName) => {page = GamePage
   opponent = opponentName}" />
   <Game v-else-if="page === 'Game'"/>
-  <h1>{{page}}</h1>
-  <h1>{{opponent}}</h1>
 </template>
 
 <style scoped></style>

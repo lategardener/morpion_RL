@@ -40,3 +40,11 @@ def action_played(app, action: ActionPlayed):
         "message": "Success",
         "move played": action.move,
     }
+
+def reset(app):
+    if app.state.env is not None:
+        app.state.env.reset()
+        return {
+            "message": "Success",
+        }
+    return {"message": "Reset impossible"}

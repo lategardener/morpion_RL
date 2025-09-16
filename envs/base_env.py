@@ -123,6 +123,7 @@ class TicTacToeBaseEnv(gym.Env):
         """
         self.player = 0
         self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8)
+        self.is_done = False
         return self.get_observation(), {}
 
     def step(self, action):

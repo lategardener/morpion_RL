@@ -27,30 +27,41 @@ async function GetBoardInfo(){
   }
 }
 
-async function play(move){
+async function play(action){
+  console.log(typeof move)
+  try{
+    const actionConfig = {
+      move: action,
+    }
+    const response = await axios.post("http://127.0.0.1:8000/game/actionPlayed", actionConfig)
+    console.log("Play response", response)
+  }
+  catch (error){
+    console.log(error)
+  }
+}
+
+async function userPlayed(action){
   console.log(currentPlayer.value !== playOrder.value)
   console.log(!isDone.value && currentPlayer.value === playOrder.value)
   if (!isDone.value && currentPlayer.value === playOrder.value){
     console.log("In...")
-    console.log("move", move)
-    try{
-      const action = {
-        action: move,
-      }
-      const response = await axios.post("http://127.0.0.1:8000/game/actionPlayed", action)
-      console.log(response)
-    }
-    catch (error){
-      console.log(error)
-    }
-
+    console.log("action", action)
+    await play(action)
     await GetBoardInfo()
   }
 }
 
-watch(currentPlayer, (newCurrentPlayer) => {
-  if (newCurrentPlayer !== playOrder.value){
-    //pass
+watch(currentPlayer, async (newCurrentPlayer) => {
+  console.log(newCurrentPlayer)
+  console.log(playOrder.value)
+  if (newCurrentPlayer !== playOrder.value) {
+    console.log("here")
+    const response = await axios.get("http://127.0.0.1:8000/game/move")
+    console.log(response)
+    const action = response.data
+    await play(action)
+    await GetBoardInfo()
   }
 })
 
@@ -64,7 +75,7 @@ onMounted(() => {
 <div :class="boardContainer_">
   <div v-for="(row, rowIndex) in board" :key="rowIndex">
     <span v-for="(col, colIndex) in row" :key="colIndex">
-      <button :class="cell_" @click="play(board_size * rowIndex + colIndex)">
+      <button :class="cell_" @click="userPlayed(board_size * rowIndex + colIndex)">
         {{ col === 3 ? '' : col === 0 ? 'X' : 'O' }}
       </button>
     </span>

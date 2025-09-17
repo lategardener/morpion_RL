@@ -15,7 +15,7 @@ const winner = ref(null)
 const buttonSize = computed(() => {
   if (board_size.value === 3) return 190
   if (board_size.value === 5) return 120
-  if (board_size.value === 9) return 50
+  if (board_size.value === 9) return 70
   return 50
 })
 

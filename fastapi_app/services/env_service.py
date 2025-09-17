@@ -17,7 +17,8 @@ def observation(app):
 def init_env(app, configs: EnvConfigs):
 
     app.state.env = TicTacToeBaseEnv(board_length=configs.board_length,
-                           pattern_victory_length=configs.pattern_victory_length,
+                                     pattern_victory_length=configs.pattern_victory_length,
+                                     active_heuristic=False
                            )
     return {
         "message": "Success",

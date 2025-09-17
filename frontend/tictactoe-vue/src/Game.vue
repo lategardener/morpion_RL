@@ -23,7 +23,7 @@ const buttonSize = computed(() => {
 const fontSize = computed(() => {
   if (board_size.value === 3) return 100
   if (board_size.value === 5) return 60
-  if (board_size.value === 9) return 25
+  if (board_size.value === 9) return 50
   return 25
 })
 
@@ -198,7 +198,8 @@ onMounted(() => {
   align-items: center;
   height: 100vh;
   flex-direction: column;
-  background-image: linear-gradient(to bottom, #133567, #184881, #1a5b9c, #1770b8, #0885d4);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.15) 100%), radial-gradient(at top center, rgba(255,255,255,0.40) 0%, rgba(0,0,0,0.40) 120%) #989898;
+  background-blend-mode: multiply,multiply;
 }
 
 .envActions{

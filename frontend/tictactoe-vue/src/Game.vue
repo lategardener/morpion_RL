@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import axios from "axios"
 const board = ref([])
 const playOrder = ref(0)
@@ -11,6 +11,20 @@ const boardContainer_ = ref('boardContainer')
 const currentPlayer = ref(0)
 const actionMask = ref([])
 const winner = ref(null)
+
+const buttonSize = computed(() => {
+  if (board_size.value === 3) return 190
+  if (board_size.value === 5) return 120
+  if (board_size.value === 9) return 50
+  return 50
+})
+
+const fontSize = computed(() => {
+  if (board_size.value === 3) return 100
+  if (board_size.value === 5) return 60
+  if (board_size.value === 9) return 25
+  return 25
+})
 
 async function GetBoardInfo(){
   try{
@@ -104,13 +118,15 @@ onMounted(() => {
     <button class="glass" :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}" @click="reset()">
       Restart
     </button>
-    <button class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">
+    <button @click="$emit('board-choice', 'BoardChoice')" class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">
       Change configs
     </button>
   </div>
   <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
     <div v-for="(col, colIndex) in row" :key="colIndex">
-      <button :class="[cell_, col === 1 ? agent_color_ : '']" @click="userPlayed(board_size * rowIndex + colIndex)">
+      <button :class="[cell_, col === 1 ? agent_color_ : '']"
+              @click="userPlayed(board_size * rowIndex + colIndex)"
+              :style="{width: buttonSize + 'px', height: buttonSize + 'px', fontSize: fontSize + 'px'}">
         {{ col === 3 ? '' : col === 0 ? 'X' : 'O' }}
       </button>
     </div>
@@ -128,10 +144,7 @@ onMounted(() => {
 }
 
 .cell {
-  width: 100px;
-  height: 100px;
   font-weight: bold;
-  font-size: 50px;
   color: #1049af;
   /* From https://css.glass */
   background: rgba(255, 255, 255, 0.2);

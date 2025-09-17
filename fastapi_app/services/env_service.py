@@ -16,10 +16,6 @@ def observation(app):
 
 def init_env(app, configs: EnvConfigs):
 
-    if app.state.env is not None:
-        return{
-            "message": "Env already initialized",
-        }
     app.state.env = TicTacToeBaseEnv(board_length=configs.board_length,
                            pattern_victory_length=configs.pattern_victory_length,
                            )

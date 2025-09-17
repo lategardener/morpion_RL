@@ -22,7 +22,7 @@ async function InitEnv(board_length, pattern_victory_length){
 <template>
   <button @click="InitEnv(3, 3)">3x3</button>
   <button @click="InitEnv(5, 4)">5x5</button>
-  <button @click="InitEnv(9, 9)">9x9</button>
+  <button @click="InitEnv(9, 5)">9x9</button>
   <h3>{{response}}</h3>
 </template>
 

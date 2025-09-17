@@ -33,7 +33,8 @@ class TicTacToeBaseEnv(gym.Env):
                  board_length=DEFAULT_BOARD_LENGTH,
                  pattern_victory_length=DEFAULT_PATTERN_VICTORY_LENGTH,
                  render_mode=DEFAULT_RENDER_MODE,
-                 victory_reward=REWARD_VICTORY):
+                 victory_reward=REWARD_VICTORY,
+                 active_heuristic=True):
         """
         Initialize the TicTacToe environment.
 
@@ -48,6 +49,7 @@ class TicTacToeBaseEnv(gym.Env):
         self.board_length = board_length
         self.pattern_victory_length = pattern_victory_length
         self.render_mode = render_mode
+        self.active_heuristic = active_heuristic
 
         # Game board initialized to EMPTY_CELL (usually -1 or 0)
         self.gameboard = np.full((self.board_length, self.board_length), EMPTY_CELL, dtype=np.int8)
@@ -166,11 +168,12 @@ class TicTacToeBaseEnv(gym.Env):
             terminated = True
             self.is_done = True
         else:
-            reward = cost_function(
-                str(self.player), str(1 - self.player),
-                self.gameboard, self.board_length,
-                self.pattern_victory_length, self.valid_actions()
-            )
+            if self.active_heuristic:
+                reward = cost_function(
+                    str(self.player), str(1 - self.player),
+                    self.gameboard, self.board_length,
+                    self.pattern_victory_length, self.valid_actions()
+                )
 
         self.player = 1 - self.player  # Switch player
         return self.get_observation(), reward, terminated, False, {}

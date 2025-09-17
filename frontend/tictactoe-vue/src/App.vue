@@ -14,7 +14,7 @@ const opponent = ref("")
   <BoardChoice v-else-if="page === 'BoardChoice'" @opponents="(OpponentPage) => page = OpponentPage" />
   <Opponent v-else-if="page === 'Opponent'" @game="(GamePage, opponentName) => {page = GamePage
   opponent = opponentName}" />
-  <Game v-else-if="page === 'Game'"/>
+  <Game v-else-if="page === 'Game'" @board-choice="(BoardChoicePage) => page = BoardChoicePage"/>
 </template>
 
 <style scoped></style>

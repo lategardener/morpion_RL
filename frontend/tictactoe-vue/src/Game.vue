@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import axios from "axios"
 const board = ref([])
 const playOrder = ref(0)
@@ -10,6 +10,21 @@ const agent_color_ = ref('agent_color')
 const boardContainer_ = ref('boardContainer')
 const currentPlayer = ref(0)
 const actionMask = ref([])
+const winner = ref(null)
+
+const buttonSize = computed(() => {
+  if (board_size.value === 3) return 190
+  if (board_size.value === 5) return 120
+  if (board_size.value === 9) return 70
+  return 50
+})
+
+const fontSize = computed(() => {
+  if (board_size.value === 3) return 100
+  if (board_size.value === 5) return 60
+  if (board_size.value === 9) return 25
+  return 25
+})
 
 async function GetBoardInfo(){
   try{
@@ -46,7 +61,7 @@ async function userPlayed(action){
   console.log(!isDone.value && currentPlayer.value === playOrder.value)
   if (!isDone.value && currentPlayer.value === playOrder.value){
     console.log("In...")
-    console.log("action", action)
+    console.log("action : ", action)
     await play(action)
     await GetBoardInfo()
   }
@@ -57,25 +72,44 @@ async function reset(){
   await GetBoardInfo()
   console.log("Reset response :", response.data)
   playOrder.value = 0
+  winner.value = null
 }
 
 watch(currentPlayer, async (newCurrentPlayer) => {
   console.log(newCurrentPlayer)
   console.log(playOrder.value)
   if (newCurrentPlayer !== playOrder.value && !isDone.value) {
-    console.log("here")
     const response = await axios.get("http://127.0.0.1:8000/game/move")
-    console.log(response)
+    console.log("Move :", response.data)
     const action = response.data
     await play(action)
     await GetBoardInfo()
   }
 })
 
+watch(isDone, (isDoneUpdate) => {
+  console.log("Is done ?", isDoneUpdate)
+  if (isDoneUpdate === 1){
+    const onlyOnes = actionMask.value.every(v => v === 0);
+    console.log("Is board full ?", onlyOnes)
+    if (onlyOnes === true){
+      winner.value = "Draw"
+    }
+    else if (playOrder.value === currentPlayer.value){
+      winner.value = "Agent win"
+    }
+    else{
+      winner.value = "You win"
+    }
+
+    console.log("Winner ?", winner.value)
+  }
+})
 
 onMounted(() => {
   GetBoardInfo()
 })
+
 </script>
 
 <template>
@@ -84,18 +118,20 @@ onMounted(() => {
     <button class="glass" :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}" @click="reset()">
       Restart
     </button>
-    <button class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">
+    <button @click="$emit('board-choice', 'BoardChoice')" class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">
       Change configs
     </button>
   </div>
   <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
     <div v-for="(col, colIndex) in row" :key="colIndex">
-      <button :class="[cell_, col === 1 ? agent_color_ : '']" @click="userPlayed(board_size * rowIndex + colIndex)">
+      <button :class="[cell_, col === 1 ? agent_color_ : '']"
+              @click="userPlayed(board_size * rowIndex + colIndex)"
+              :style="{width: buttonSize + 'px', height: buttonSize + 'px', fontSize: fontSize + 'px'}">
         {{ col === 3 ? '' : col === 0 ? 'X' : 'O' }}
       </button>
     </div>
   </div>
-
+  <p :style="{ visibility: winner ? 'visible' : 'hidden', height: '60px', padding: '10px' }">{{ winner }}</p>
 </div>
 </template>
 
@@ -108,10 +144,7 @@ onMounted(() => {
 }
 
 .cell {
-  width: 100px;
-  height: 100px;
   font-weight: bold;
-  font-size: 50px;
   color: #1049af;
   /* From https://css.glass */
   background: rgba(255, 255, 255, 0.2);

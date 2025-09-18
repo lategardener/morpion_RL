@@ -11,10 +11,11 @@ const opponent = ref("")
 
 <template>
   <Welcome v-if="page === 'Welcome'" @board-choice="(BoardChoicePage) => page = BoardChoicePage" />
-  <BoardChoice v-else-if="page === 'BoardChoice'" @opponents="(OpponentPage) => page = OpponentPage" />
-  <Opponent v-else-if="page === 'Opponent'" @game="(GamePage, opponentName) => {page = GamePage
-  opponent = opponentName}" />
-  <Game v-else-if="page === 'Game'" @board-choice="(BoardChoicePage) => page = BoardChoicePage"/>
+  <BoardChoice v-else-if="page === 'BoardChoice'" @opponents="(OpponentPage) => page = OpponentPage"
+               @welcome="(WelcomePage) => page = WelcomePage" />
+  <Opponent v-else-if="page === 'Opponent'" @game="(GamePage, opponentName) => {page = GamePage; opponent = opponentName;}"
+            @board-choice="(BoardChoicePage) => page = BoardChoicePage" />
+  <Game v-else-if="page === 'Game'" @board-choice="(BoardChoicePage) => page = BoardChoicePage" :msg="opponent"/>
 </template>
 
 <style scoped></style>

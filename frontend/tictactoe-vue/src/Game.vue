@@ -11,6 +11,7 @@ const boardContainer_ = ref('boardContainer')
 const currentPlayer = ref(0)
 const actionMask = ref([])
 const winner = ref(null)
+const can_play = ref(true)
 
 const buttonSize = computed(() => {
   if (board_size.value === 3) return 190
@@ -22,7 +23,7 @@ const buttonSize = computed(() => {
 const fontSize = computed(() => {
   if (board_size.value === 3) return 100
   if (board_size.value === 5) return 60
-  if (board_size.value === 9) return 25
+  if (board_size.value === 9) return 50
   return 25
 })
 
@@ -30,7 +31,6 @@ async function GetBoardInfo(){
   try{
 
     const response = await axios.get("http://127.0.0.1:8000/game/observation")
-    console.log("response :", response.data)
     board.value = response.data.observation
     currentPlayer.value = response.data.current_player
     isDone.value = response.data.is_done
@@ -43,13 +43,11 @@ async function GetBoardInfo(){
 }
 
 async function play(action){
-  console.log(typeof move)
   try{
     const actionConfig = {
       move: action,
     }
     const response = await axios.post("http://127.0.0.1:8000/game/actionPlayed", actionConfig)
-    console.log("Play response", response)
   }
   catch (error){
     console.log(error)
@@ -57,30 +55,36 @@ async function play(action){
 }
 
 async function userPlayed(action){
-  console.log(currentPlayer.value !== playOrder.value)
-  console.log(!isDone.value && currentPlayer.value === playOrder.value)
   if (!isDone.value && currentPlayer.value === playOrder.value){
-    console.log("In...")
-    console.log("action : ", action)
     await play(action)
     await GetBoardInfo()
   }
 }
 
-async function reset(){
-  const response = await axios.post("http://127.0.0.1:8000/game/resetEnv")
+async function reset(newOrder){
+  can_play.value = false
+  await axios.post("http://127.0.0.1:8000/game/resetEnv")
   await GetBoardInfo()
-  console.log("Reset response :", response.data)
-  playOrder.value = 0
+  console.log("reset")
+  if (newOrder !== null){
+    playOrder.value = 1 - playOrder.value
+  }
+  if (playOrder.value !== currentPlayer.value){
+    const response = await axios.get("http://127.0.0.1:8000/game/move")
+    const action = response.data
+    await play(action)
+    await GetBoardInfo()
+  }
+  can_play.value = true
   winner.value = null
 }
 
+
 watch(currentPlayer, async (newCurrentPlayer) => {
-  console.log(newCurrentPlayer)
-  console.log(playOrder.value)
-  if (newCurrentPlayer !== playOrder.value && !isDone.value) {
+  if (can_play.value === true && newCurrentPlayer !== playOrder.value && !isDone.value) {
+    console.log("watch : ", newCurrentPlayer)
+
     const response = await axios.get("http://127.0.0.1:8000/game/move")
-    console.log("Move :", response.data)
     const action = response.data
     await play(action)
     await GetBoardInfo()
@@ -115,7 +119,23 @@ onMounted(() => {
 <template>
 <div :class="boardContainer_">
   <div class="envActions">
-    <button class="glass" :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}" @click="reset()">
+    <button
+      class="glass"
+      :style="{
+    padding: '10px',
+    marginRight: '10px',
+    fontSize: '20px',
+    width: '150px',
+    backgroundColor: playOrder === 0 ? '#1049af' : '#b80db5',
+    color: 'white',
+    fontWeight: 'bold'
+  }"
+      @click="reset(true)"
+    >
+      {{ playOrder === 0 ? '1st player' : '2nd player' }}
+    </button>
+
+    <button class="glass" :style="{padding: '10px', marginRight: '10px', fontSize: '20px', width: '150px'}" @click="reset(null)">
       Restart
     </button>
     <button @click="$emit('board-choice', 'BoardChoice')" class="glass" :style="{padding: '10px', marginLeft: '10px', fontSize: '20px'}">
@@ -153,11 +173,19 @@ onMounted(() => {
   backdrop-filter: blur(7.9px);
   -webkit-backdrop-filter: blur(7.9px);
   border: 1px solid rgba(255, 255, 255, 0.26);
+}
 
+.cell:hover {
+  background: rgba(11, 168, 168, 0.15);
+}
+
+.cell:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 15px rgba(0,0,0,0.2);
 }
 
 .agent_color{
-  color : #ae0543;
+  color : #b80db5;
 }
 
 .boardContainer{
@@ -178,8 +206,8 @@ onMounted(() => {
   align-items: center;
   height: 100vh;
   flex-direction: column;
-  background: #020024;
-  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 35%, rgba(0, 212, 255, 1) 100%);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.15) 100%), radial-gradient(at top center, rgba(255,255,255,0.40) 0%, rgba(0,0,0,0.40) 120%) #989898;
+  background-blend-mode: multiply,multiply;
 }
 
 .envActions{
@@ -194,5 +222,14 @@ onMounted(() => {
   backdrop-filter: blur(7.9px);
   -webkit-backdrop-filter: blur(7.9px);
   border: 1px solid rgba(255, 255, 255, 0.26);
+}
+.glass:hover {
+  background: #14a3a3;
+  color: white;
+}
+
+.glass:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 15px rgba(0,0,0,0.2);
 }
 </style>

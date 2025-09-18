@@ -173,7 +173,15 @@ onMounted(() => {
   backdrop-filter: blur(7.9px);
   -webkit-backdrop-filter: blur(7.9px);
   border: 1px solid rgba(255, 255, 255, 0.26);
+}
 
+.cell:hover {
+  background: rgba(11, 168, 168, 0.15);
+}
+
+.cell:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 15px rgba(0,0,0,0.2);
 }
 
 .agent_color{
@@ -214,5 +222,14 @@ onMounted(() => {
   backdrop-filter: blur(7.9px);
   -webkit-backdrop-filter: blur(7.9px);
   border: 1px solid rgba(255, 255, 255, 0.26);
+}
+.glass:hover {
+  background: #14a3a3;
+  color: white;
+}
+
+.glass:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 15px rgba(0,0,0,0.2);
 }
 </style>

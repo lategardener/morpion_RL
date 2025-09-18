@@ -57,13 +57,11 @@ async function InitEnv(board_length, pattern_victory_length){
   transition: all 0.3s ease;
 }
 
-/* Hover → changement de background et texte blanc */
 .glass:hover {
   background: #14a3a3;
   color: white;
 }
 
-/* Active → bouton s’enfonce */
 .glass:active {
   transform: translateY(4px);
   box-shadow: 0 2px 15px rgba(0,0,0,0.2);
